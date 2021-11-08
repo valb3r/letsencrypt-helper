@@ -1,0 +1,11 @@
+server:
+  port: 443
+  ssl:
+    key-store: letsencrypt-keystore
+    key-store-password: change-me # Password for KeyStore protection
+    key-store-type: PKCS12
+    key-alias: tomcat # Certificate name in KeyStore
+    enabled: true # Important to place this explicitly
+lets-encrypt-helper:
+  domain: my-domain.example.com # Domain to issue certificate for
+  contact: john.doe@mymail.example.com # Your contact for LetsEncrypt
