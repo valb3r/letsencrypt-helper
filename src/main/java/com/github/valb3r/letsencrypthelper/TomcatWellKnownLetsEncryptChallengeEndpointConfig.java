@@ -73,14 +73,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * This configuration class is responsible for maintaining KeyStore with LetsEncrypt certificates.
  *
  * By default, this bean will try to use server.ssl.* configuration variables, so you need to configure your Tomcat SSL properly.
- * In addition to {@code server.ssl.*} , the library requires
+ * In addition to properly configured {@code server.ssl.*} for the KeyStore usage (ideally PKCS12), the library requires:
  * {@code lets-encrypt-helper.domain} Domain for which the certificate is going to be issued,
  * {@code lets-encrypt-helper.contact} Email or other contact for LetsEncrypt - i.e. {@code mailto:foo@example.com},
- * {@code lets-encrypt-helper.account-key-password} Password for Domain/User keys.
- * If the KeyStore does not exist at the moment application is started, this bean will try to issue the certificate
+ * If the KeyStore does not exist at the moment application is started, this bean will try to create new KeyStore with self-signed cert and keys
  * After start, this bean will watch LetsEncrypt certificate for expiration and will reissue certificate if it is close to its expiration.
  *
- * Note: It will use same KeyStore to store your Certificate, Domain key and User key.
+ * Note: It will use same KeyStore to store your Certificate, Domain key and Account key.
  */
 @Configuration
 @ConditionalOnProperty(value = "server.ssl.enabled", havingValue = "true")
@@ -102,6 +101,18 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     private final List<Endpoint> observedEndpoints = new CopyOnWriteArrayList<>();
     private final AtomicBoolean customized = new AtomicBoolean();
 
+    /**
+     * Initialize LetsEncrypt certificate obtaining and renewal class.
+     * @param serverProperties - SSL properties (serverProperties.ssl) to be used
+     * @param domain - Domain to issue certificate for (i.e. {@code example.com})
+     * @param contact - Your email (i.e. {@code john.doe@example.com})
+     * @param accountKeyAlias - Key name to store your Account key-pair (necessary for renewal process)
+     * @param letsEncryptServer - LetsEncrypt server to use, as defined in Acme4j. acme://letsencrypt.org is production
+     * @param keySize - RSA Key size for Domain and Account keys that are to be generated
+     * @param updateBeforeExpiry - Start trying to update certificate {@code updateBeforeExpiry} time before it expires
+     * @param busyWaitInterval - How frequently to check if certificate needs update (scheduled-alike busy wait)
+     * @param enabled - If the helper is enabled (for i.e. development)
+     */
     public TomcatWellKnownLetsEncryptChallengeEndpointConfig(
             ServerProperties serverProperties,
             @Value("${lets-encrypt-helper.domain}") String domain,
