@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.github.valb3r.letsencrypthelper'
-version = '0.1'
+version = '0.1.1-SNAPSHOT'
 sourceCompatibility = '11'
 
 repositories {
