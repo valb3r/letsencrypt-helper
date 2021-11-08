@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.github.valb3r.letsencrypthelper'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'org.springframework:spring-context:5.3.12'
+    compileOnly 'org.springframework:spring-webmvc:5.3.12'
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:2.5.6'
+    compileOnly 'org.apache.tomcat.embed:tomcat-embed-core:9.0.38'
+
+    implementation 'org.shredzone.acme4j:acme4j-client:2.12'
+    implementation 'org.shredzone.acme4j:acme4j-utils:2.12'
+
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
+}
