@@ -31,6 +31,29 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 3. Define following properties in your application configuration or environment:
     1. `lets-encrypt-helper.domain` the domain to issue certificate for
     2. `lets-encrypt-helper.contact` your contact for LetsEncrypt (i.e. your email in format `mailto:john.doe@example.com`)
+4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
+
+
+### Example configuration
+
+Launch your application with `-Dspring.profiles.active=ssl`
+
+`application-ssl.yaml`:
+```yaml
+server:
+  port: 443
+  ssl:
+    key-store: file:/home/user/letsencrypt/application-keystore # Path to KeyStore with certificates and keys
+    key-store-password: change-me # Password for KeyStore protection
+    key-store-type: PKCS12
+    key-alias: tomcat # Certificate name in KeyStore
+    enabled: true # Important to place this explicitly
+lets-encrypt-helper:
+  domain: my-domain.example.com # Domain to issue certificate for
+  contact: john.doe@mymail.example.com # Your contact for LetsEncrypt
+```
+
+**Note:** On your server ensure you have opened port `80` for Java (i.e. in Firewall) and Java can bind to it (i.e. follow [Linux allow listening to low port without sudo](https://superuser.com/a/892391) to open ports 80,443 for `java`)
 
 ## Alternative
 
