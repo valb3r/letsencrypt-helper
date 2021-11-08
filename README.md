@@ -55,7 +55,7 @@ lets-encrypt-helper:
 
 **Note:** On your server ensure you have opened port `80` for Java (i.e. in Firewall) and Java can bind to it (i.e. follow [Linux allow listening to low port without sudo](https://superuser.com/a/892391) to open ports 80,443 for `java`)
 
-Example project with SSL and LetsEncrypt management using this library **[is located here](example)**
+**Example project** with SSL and LetsEncrypt management using this library **[is located here](example)**
 
 ## Alternative
 
