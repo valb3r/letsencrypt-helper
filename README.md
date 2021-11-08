@@ -11,6 +11,10 @@ The library will **automatically**  :
 2. Store generated keys and certificate into single KeyStore (`server.ssl.keystore`)
 3. Renew LetsEncrypt certificate (it watches for certificate expiration date and updates it to new before old is expired)
 
+# Application requirements
+
+To perform HTTP-01 ACME challenge, the application must listen on port `80`, this library will automatically create
+Tomcat connector to this port, so the only thing needed on your side is to open `80` port for the application.
 
 # Servlet containers supported (embedded)
 
