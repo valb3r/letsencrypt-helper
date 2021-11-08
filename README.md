@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/valb3r/letsencrypt-helper.svg)](https://jitpack.io/#valb3r/letsencrypt-helper)
+
 # What is this
 
 This library allows obtaining and updating LetsEncrypt SSL certificate automatically for your Spring-Boot Web application.
@@ -19,7 +21,7 @@ The library will **automatically** :
 
 1. Import this library:
     1. [Add JitPack repository to your dependency management system](https://jitpack.io/)
-    2. Add this library
+    2. Add this library to your dependencies, [like it is shown here](https://jitpack.io/#valb3r/letsencrypt-helper/0.1.1)
 2. Declare `@Import(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class)` on your configuration
 3. Define following properties in your application configuration or environment:
     1. `lets-encrypt-helper.domain` the domain to issue certificate for
