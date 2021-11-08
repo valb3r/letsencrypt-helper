@@ -1,8 +1,7 @@
 package com.github.valb3r.letsencrypthelper;
 
 import org.apache.catalina.connector.Connector;
-import org.apache.coyote.AbstractProtocol;
-import org.apache.tomcat.util.net.AbstractEndpoint;
+import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -43,7 +42,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.file.Files;
@@ -160,51 +158,40 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
         createBasicKeystoreIfMissing();
 
-        var protocol = connector.getProtocolHandler();
-        if (!(protocol instanceof AbstractProtocol)) {
+        var protocolHandler = connector.getProtocolHandler();
+        if (!(protocolHandler instanceof AbstractHttp11Protocol)) {
             logger.info("Impossible to customize protocol {} for connector {}", connector.getProtocolHandler(), connector);
             return;
         }
+        var protocol = (AbstractHttp11Protocol<?>) protocolHandler;
 
-        try {
-            var method = AbstractProtocol.class.getDeclaredMethod("getEndpoint");
-            method.setAccessible(true);
-            var endpoint = (AbstractEndpoint<?, ?>) method.invoke(protocol);
-            if (!endpoint.isSSLEnabled()) {
-                logger.info("Endpoint {}:{} is not SSL enabled", endpoint.getClass().getCanonicalName(), endpoint.getPort());
-                return;
-            }
+        var sslConfig = Arrays.stream(protocol.findSslHostConfigs())
+                .filter(it -> null != it.getCertificateKeystoreFile())
+                .filter(it -> it.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore()))
+                .filter(it -> serverProperties.getSsl().getKeyStorePassword().equals(it.getCertificateKeystorePassword()))
+                .findFirst()
+                .orElse(null);
 
-            var sslConfig = Arrays.stream(endpoint.findSslHostConfigs())
-                    .filter(it -> null != it.getCertificateKeystoreFile())
-                    .filter(it -> it.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore()))
-                    .filter(it -> serverProperties.getSsl().getKeyStorePassword().equals(it.getCertificateKeystorePassword()))
-                    .findFirst()
-                    .orElse(null);
+        if (null == sslConfig) {
+            logger.info("Endpoint {}:{} has different KeyStore file", protocol.getClass().getCanonicalName(), protocol.getPort());
+            return;
+        }
 
-            if (null == sslConfig) {
-                logger.info("Endpoint {}:{} has different KeyStore file", endpoint.getClass().getCanonicalName(), endpoint.getPort());
-                return;
-            }
+        File keystore = getKeystoreFile();
+        if (keystore.exists() && !keystore.canWrite()) {
+            throw new IllegalStateException("Unable to write to: " + serverProperties.getSsl().getKeyStore());
+        } else if (!keystore.exists()) {
+            throw new IllegalStateException("No Keystore: " + serverProperties.getSsl().getKeyStore());
+        }
 
-            File keystore = getKeystoreFile();
-            if (keystore.exists() && !keystore.canWrite()) {
-                throw new IllegalStateException("Unable to write to: " + serverProperties.getSsl().getKeyStore());
-            } else if (!keystore.exists()) {
-                throw new IllegalStateException("No Keystore: " + serverProperties.getSsl().getKeyStore());
-            }
+        Endpoint observe = createObservableEndpoint(protocol, sslConfig);
+        if (observe == null) {
+            return;
+        }
 
-            Endpoint observe = createObservableEndpoint(endpoint, sslConfig);
-            if (observe == null) {
-                return;
-            }
-
-            observedEndpoints.add(observe);
-            if (customized.compareAndSet(false, true)) {
-                new Thread(this::letsEncryptCheckCertValidityAndRotateIfNeeded).start();
-            }
-        } catch (NoSuchMethodException|InvocationTargetException|IllegalAccessException e) {
-            throw new RuntimeException(e);
+        observedEndpoints.add(observe);
+        if (customized.compareAndSet(false, true)) {
+            new Thread(this::letsEncryptCheckCertValidityAndRotateIfNeeded).start();
         }
     }
 
@@ -253,15 +240,15 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         logger.info("Created basic (dummy cert, real account/domain keys) KeyStore: {}", keystoreFile.getAbsolutePath());
     }
 
-    private Endpoint createObservableEndpoint(AbstractEndpoint<?, ?> endpoint, SSLHostConfig sslConfig) {
-        var observe = new Endpoint(sslConfig, endpoint);
+    private Endpoint createObservableEndpoint(AbstractHttp11Protocol<?> protocol, SSLHostConfig sslConfig) {
+        var observe = new Endpoint(sslConfig, protocol);
         var ks = tryToReadKeystore();
         var cert = tryToReadCertificate(observe, ks);
         if (null == cert) {
             logger.warn(
                     "For Endpoint {}:{} unable to read certificate from {}",
-                    endpoint.getClass().getCanonicalName(),
-                    endpoint.getPort(),
+                    protocol.getClass().getCanonicalName(),
+                    protocol.getPort(),
                     sslConfig.getCertificateKeystoreFile()
             );
             return null;
@@ -309,8 +296,8 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             var cert = tryToReadCertificate(endpoint, ks);
             if (null == cert) {
                 logger.warn("Certificate is null on {}:{} from {}",
-                        endpoint.getTomcatEndpoint().getClass(),
-                        endpoint.getTomcatEndpoint().getPort(),
+                        endpoint.getProtocol().getClass(),
+                        endpoint.getProtocol().getPort(),
                         endpoint.getHostConfig().getCertificateKeystoreFile()
                 );
                 continue;
@@ -322,7 +309,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
             try {
                 updateCertificateAndKeystore(ks);
-                endpoint.getTomcatEndpoint().reloadSslHostConfigs();
+                endpoint.getProtocol().reloadSslHostConfigs();
             } catch (RuntimeException ex) {
                 logger.warn("Failed updating KeyStore", ex);
             }
@@ -545,19 +532,19 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
     private static class Endpoint {
         private final SSLHostConfig hostConfig;
-        private final AbstractEndpoint<?, ?> tomcatEndpoint;
+        private final AbstractHttp11Protocol protocol;
 
-        public Endpoint(SSLHostConfig hostConfig, AbstractEndpoint<?, ?> tomcatEndpoint) {
+        public Endpoint(SSLHostConfig hostConfig, AbstractHttp11Protocol protocol) {
             this.hostConfig = hostConfig;
-            this.tomcatEndpoint = tomcatEndpoint;
+            this.protocol = protocol;
         }
 
         public SSLHostConfig getHostConfig() {
             return hostConfig;
         }
 
-        public AbstractEndpoint<?, ?> getTomcatEndpoint() {
-            return tomcatEndpoint;
+        public AbstractHttp11Protocol getProtocol() {
+            return protocol;
         }
     }
 }
