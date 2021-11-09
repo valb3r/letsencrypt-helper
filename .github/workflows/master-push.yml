@@ -31,5 +31,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Build project backend and frontend (monolith) and run tests
+      - name: Build project and run tests
         run: ./gradlew clean test
