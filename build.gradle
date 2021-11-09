@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.valb3r'
-version = '0.1.4'
+version = '0.1.4-SNAPSHOT'
 sourceCompatibility = '11'
 
 repositories {
