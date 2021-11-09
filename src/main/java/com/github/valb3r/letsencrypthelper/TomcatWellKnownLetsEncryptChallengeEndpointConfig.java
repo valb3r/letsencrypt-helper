@@ -85,15 +85,22 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     public static final String DUMMY_CN = "CN=letsencrypt-java-helper";
     private final Logger logger = LoggerFactory.getLogger(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class);
 
+    private final int serverPort;
+
     private final String domain;
-    private final String contactEmail;
+    private final String contact;
     private final String letsEncryptServer;
     private final int keySize;
     private final Duration updateBeforeExpiry;
     private final Duration busyWaitInterval;
     private final String accountKeyAlias;
+    private final Duration accountCertValidity;
     private final boolean enabled;
     private final ServerProperties serverProperties;
+
+    // Development only properties, you can't change these for production
+    private final int http01ChallengePort;
+    // End
 
     private final Map<String, String> challengeTokens = new ConcurrentHashMap<>();
     private final List<TargetProtocol> observedProtocols = new CopyOnWriteArrayList<>();
@@ -113,6 +120,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
      */
     public TomcatWellKnownLetsEncryptChallengeEndpointConfig(
             ServerProperties serverProperties,
+            @Value("${server.port}") int serverPort,
             @Value("${lets-encrypt-helper.domain}") String domain,
             @Value("${lets-encrypt-helper.contact}") String contact,
             @Value("${lets-encrypt-helper.account-key-alias:letsencrypt-user}") String accountKeyAlias,
@@ -120,18 +128,23 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             @Value("${lets-encrypt-helper.key-size:2048}") int keySize,
             @Value("${lets-encrypt-helper.update-before-expiry:P7D}") Duration updateBeforeExpiry,
             @Value("${lets-encrypt-helper.busy-wait-interval:PT1M}") Duration busyWaitInterval,
-            @Value("${lets-encrypt-helper.enabled:true}") boolean enabled
+            @Value("${lets-encrypt-helper.account-cert-validity:P3650D}") Duration accountCertValidity,
+            @Value("${lets-encrypt-helper.enabled:true}") boolean enabled,
+            @Value("${lets-encrypt-helper.development-only.http01-challenge-port:80}") int http01ChallengePort
     ) {
         Security.addProvider(new BouncyCastleProvider());
+        this.serverPort = serverPort;
         this.serverProperties = serverProperties;
         this.domain = domain;
-        this.contactEmail = contact;
+        this.contact = contact;
+        this.accountKeyAlias = accountKeyAlias;
         this.letsEncryptServer = letsEncryptServer;
         this.keySize = keySize;
         this.updateBeforeExpiry = updateBeforeExpiry;
         this.busyWaitInterval = busyWaitInterval;
-        this.accountKeyAlias = accountKeyAlias;
+        this.accountCertValidity = accountCertValidity;
         this.enabled = enabled;
+        this.http01ChallengePort = http01ChallengePort;
 
         if (null == this.serverProperties.getSsl()) {
             throw new IllegalStateException("SSL is not configured");
@@ -156,13 +169,13 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             return;
         }
 
-        createBasicKeystoreIfMissing();
 
         var protocolHandler = connector.getProtocolHandler();
         if (!(protocolHandler instanceof AbstractHttp11Protocol)) {
             logger.info("Impossible to customize protocol {} for connector {}", connector.getProtocolHandler(), connector);
             return;
         }
+
         var protocol = (AbstractHttp11Protocol<?>) protocolHandler;
 
         var sslConfig = Arrays.stream(protocol.findSslHostConfigs())
@@ -177,12 +190,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             return;
         }
 
-        File keystore = getKeystoreFile();
-        if (keystore.exists() && !keystore.canWrite()) {
-            throw new IllegalStateException("Unable to write to: " + serverProperties.getSsl().getKeyStore());
-        } else if (!keystore.exists()) {
-            throw new IllegalStateException("No Keystore: " + serverProperties.getSsl().getKeyStore());
-        }
+        createBasicKeystoreIfMissing();
 
         TargetProtocol observe = createObservableProtocol(protocol, sslConfig);
         if (observe == null) {
@@ -227,10 +235,17 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         };
     }
 
+    protected Instant getNow() {
+        return Instant.now();
+    }
 
     private void createBasicKeystoreIfMissing() {
         File keystoreFile = getKeystoreFile();
         if (keystoreFile.exists()) {
+            if (!keystoreFile.canWrite()) {
+                throw new IllegalArgumentException(String.format("Keystore %s is not writable, certificate update is impossible", keystoreFile.getAbsolutePath()));
+            }
+
             logger.info("KeyStore exists: {}", keystoreFile.getAbsolutePath());
             return;
         }
@@ -259,9 +274,9 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     private Connector httpToHttpsRedirectConnector() {
         Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
         connector.setScheme("http");
-        connector.setPort(80);
+        connector.setPort(http01ChallengePort);
         connector.setSecure(false);
-        connector.setRedirectPort(443);
+        connector.setRedirectPort(serverPort);
         return connector;
     }
 
@@ -272,7 +287,8 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     private void saveKeystore(File keystoreFile, KeyStore keystore) {
         try (var os = Files.newOutputStream(keystoreFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
             keystore.store(os, serverProperties.getSsl().getKeyStorePassword().toCharArray());
-        } catch (CertificateException|KeyStoreException|NoSuchAlgorithmException|IOException ex) {
+        } catch (CertificateException | KeyStoreException | NoSuchAlgorithmException | IOException ex) {
+            logger.error("Failed saving updated keystore", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -303,7 +319,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
                 continue;
             }
 
-            if (Instant.now().isBefore(cert.getNotAfter().toInstant().minus(updateBeforeExpiry))) {
+            if (getNow().isBefore(cert.getNotAfter().toInstant().minus(updateBeforeExpiry))) {
                 continue;
             }
 
@@ -323,8 +339,9 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
             var newKeystore = KeyStore.getInstance(serverProperties.getSsl().getKeyStoreType());
             newKeystore.load(null, null);
-            var signedAccount = selfSign(accountKey, Instant.now(), Instant.now().plus(Duration.ofDays(3650)));
-            var signedDomain = selfSign(domainKey, Instant.now().minus(Duration.ofDays(3650)), Instant.now().minus(Duration.ofDays(3650)));
+            var signedAccount = selfSign(accountKey, getNow(), getNow().plus(accountCertValidity));
+            var epoch = Instant.parse("1970-01-01T00:00:00Z");
+            var signedDomain = selfSign(domainKey, epoch, epoch);
             newKeystore.setKeyEntry(serverProperties.getSsl().getKeyAlias(), domainKey.getPrivate(), keyPassword().toCharArray(), new Certificate[] { signedDomain });
             newKeystore.setKeyEntry(accountKeyAlias, accountKey.getPrivate(), keyPassword().toCharArray(), new Certificate[] { signedAccount });
             return newKeystore;
@@ -335,7 +352,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
     private Certificate selfSign(KeyPair keyPair, Instant notBefore, Instant notAfter) {
         X500Name dnName = new X500Name(DUMMY_CN);
-        BigInteger certSerialNumber = BigInteger.valueOf(Instant.now().toEpochMilli());
+        BigInteger certSerialNumber = BigInteger.valueOf(getNow().toEpochMilli());
         SubjectPublicKeyInfo subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded());
         X509v3CertificateBuilder certificateBuilder = new X509v3CertificateBuilder(
                 dnName,
@@ -370,7 +387,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             var domainKey = new KeyPair(domainKeyEntry.getCertificate().getPublicKey(), domainKeyEntry.getPrivateKey());
 
             Account account = new AccountBuilder()
-                    .addContact(contactEmail)
+                    .addContact(contact)
                     .agreeToTermsOfService()
                     .useKeyPair(accountKey)
                     .create(session);
@@ -414,7 +431,14 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     }
 
     private void finalizeOrder(Order order, byte[] csrb) throws AcmeException {
-        order.execute(csrb);
+        try {
+            order.execute(csrb);
+        } catch (AcmeException ex) {
+            order.update();
+            logger.warn("Failed order execution: {}", order.getError(), ex);
+            throw ex;
+        }
+
         waitForOrderStatus(order, Set.of(Status.PENDING, Status.PROCESSING, Status.READY));
     }
 
@@ -465,7 +489,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             var ks = KeyStore.getInstance(keystoreType);
             try (var is = Files.newInputStream(getKeystoreFile().toPath())) {
                 ks.load(is, keystorePassword.toCharArray());
-            } catch (NoSuchAlgorithmException|IOException|CertificateException e) {
+            } catch (NoSuchAlgorithmException | IOException | CertificateException e) {
                 logger.warn("Failed reading KeyStore of type {}", keystoreType, e);
                 return null;
             }
