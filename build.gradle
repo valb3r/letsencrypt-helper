@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.valb3r'
-version = '0.1.4.1'
+version = '0.1.5-SNAPSHOT'
 sourceCompatibility = '11'
 
 repositories {
@@ -42,7 +42,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId = 'com.github.valb3r'
             artifactId = 'letsencrypt-helper'
-            version = '0.1.4.1'
+            version = '0.1.5-SNAPSHOT'
 
             from components.java
         }
