@@ -197,7 +197,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (observedEndpoints.isEmpty()) {
+        if (enabled && observedEndpoints.isEmpty()) {
             throw new IllegalStateException("Failed to configure LetsEncrypt");
         }
     }
