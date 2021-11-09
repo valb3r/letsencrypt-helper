@@ -103,7 +103,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
      * Initialize LetsEncrypt certificate obtaining and renewal class.
      * @param serverProperties - SSL properties (serverProperties.ssl) to be used
      * @param domain - Domain to issue certificate for (i.e. {@code example.com})
-     * @param contact - Your email (i.e. {@code john.doe@example.com})
+     * @param contact - Your email (i.e. {@code mailto:john.doe@example.com})
      * @param accountKeyAlias - Key name to store your Account key-pair (necessary for renewal process)
      * @param letsEncryptServer - LetsEncrypt server to use, as defined in Acme4j. acme://letsencrypt.org is production
      * @param keySize - RSA Key size for Domain and Account keys that are to be generated
