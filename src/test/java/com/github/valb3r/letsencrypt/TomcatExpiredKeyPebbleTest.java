@@ -10,7 +10,7 @@ import static org.awaitility.Awaitility.await;
 class TomcatExpiredKeyPebbleTest extends BaseTest {
 
     @Test
-    void testWhenNoKeystoreNewCertificateGranted() {
+    void testWhenExpiredKeystoreNewCertificateGranted() {
         assertThat(callHelloAndGetIssuerDn()).isEqualTo("CN=expired-letsencrypt-java-helper");
         launchPebbleContainers();
         await().atMost(TIMEOUT).until(() -> callHelloAndGetIssuerDn().contains("Pebble"));

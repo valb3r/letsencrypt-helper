@@ -15,7 +15,7 @@ class TomcatNotExpiredKeystorePebbleTest extends BaseTest {
     private Duration scheduleBeat;
 
     @Test
-    void testWhenNoKeystoreNewCertificateGranted() throws InterruptedException {
+    void testWhenNotExpiredKeystoreNoCertificateGranted() throws InterruptedException {
         assertThat(scheduleBeat).isLessThan(Duration.ofSeconds(10));
         assertThat(callHelloAndGetIssuerDn()).isEqualTo("CN=not-expired-letsencrypt-java-helper");
         launchPebbleContainers();
