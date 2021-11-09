@@ -26,7 +26,7 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 
 1. Import this library:
     1. [Add JitPack repository to your dependency management system](https://jitpack.io/)
-    2. Add this library to your dependencies, [like it is shown here](https://jitpack.io/#valb3r/letsencrypt-helper/0.1.2)
+    2. Add this library to your dependencies, [like it is shown here](https://jitpack.io/#valb3r/letsencrypt-helper/0.1.3)
 2. Declare `@Import(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class)` on your configuration
 3. Define following properties in your application configuration or environment:
     1. `lets-encrypt-helper.domain` the domain to issue certificate for
