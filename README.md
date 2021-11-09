@@ -4,7 +4,7 @@
 
 This library allows obtaining and updating (renewing) LetsEncrypt SSL certificate automatically for your Spring-Boot Web application.
 With this library, you do not need `CertBot` or docker-sidecar with i.e. `Traefik` to get LetsEncrypt certificate,
-everything will be done inside your Java application.
+everything will be done inside your Java application. **No JVM restart needed** when certificate gets updated.
 
 The library will **automatically**  :
 1. Obtain LetsEncrypt certificate on fresh start
