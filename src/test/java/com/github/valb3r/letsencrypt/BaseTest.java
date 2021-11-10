@@ -2,6 +2,7 @@ package com.github.valb3r.letsencrypt;
 
 import com.github.valb3r.letsencrypt.dummyapp.DummyApp;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -32,8 +33,8 @@ abstract public class BaseTest {
     public static GenericContainer<?> PEBBLE;
     public static GenericContainer<?> PEBBLE_CHALL;
 
-    @BeforeEach
-    public void init() throws IOException {
+    @BeforeAll
+    public static void init() throws IOException {
         Files.copy(Paths.get("src/test/resources/template-expired-test-keystore"), Paths.get("src/test/resources/expired-test-keystore"), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Paths.get("src/test/resources/template-not-expired-test-keystore"), Paths.get("src/test/resources/not-expired-test-keystore"), StandardCopyOption.REPLACE_EXISTING);
     }
