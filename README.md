@@ -34,6 +34,28 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
 
 
+## Configuration
+
+
+| Property                                                   | Description                                                                                                  | Default value, if any  |
+|------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|------------------------|
+| server.ssl.key-store                                       | Path to the KeyStore, where LetsEncrypt certificates and account key are to be stored (or are already there) |                        |
+| server.ssl.key-store                                       | KeyStore type (i.e. PKCS12)                                                                                  |                        |
+| server.ssl.key-store-pasword                               | Password for KeyStore with LetsEncrypt certificate and account key                                           |                        |
+| server.ssl.key-alias                                       | LetsEncrypt certificate key alias in the keystore                                                            |                        |
+| server.port                                                | Port (secure SSL/TLS) on which your application is deployed                                                  |                        |
+| lets-encrypt-helper.domain                                 | Your applications' domain (i.e. example.com)                                                                 |                        |
+| lets-encrypt-helper.contact                                | The contact of person responsible for the domain (i.e. mailto:john@example.com)                              |                        |
+| lets-encrypt-helper.account-key-alias                      | Account key alias                                                                                            | letsencrypt-user       |
+| lets-encrypt-helper.letsencrypt-server                     | LetsEncrypt server to use                                                                                    | acme://letsencrypt.org |
+| lets-encrypt-helper.key-size                               | Certificate and Account key RSA key size                                                                     | 2048                   |
+| lets-encrypt-helper.update-before-expiry                   | Start trying to update certficate this time before expiration                                                | P7D (7 days)           |
+| lets-encrypt-helper.busy-wait-interval                     | Busy wait interval for thread that checks if the certificate is valid                                        | P1M (1 minute)         |
+| lets-encrypt-helper.account-cert-validity                  | Validity duration for Account key                                                                            | P3650D (3650 days)     |
+| lets-encrypt-helper.enabled                                | Is the helper enabled                                                                                        | true                   |
+| lets-encrypt-helper.development-only.http01-challenge-port | For development only, port for HTTP-01 ACME challenge                                                        | 80                     |
+
+
 ### Example configuration
 
 Launch your application with `-Dspring.profiles.active=ssl`
