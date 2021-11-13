@@ -2,18 +2,18 @@
 
 # What is this
 
-This library allows obtaining and updating (renewing) LetsEncrypt SSL certificate automatically for your Spring-Boot Web application.
-With this library, you do not need `CertBot` or docker-sidecar with i.e. `Traefik` to get LetsEncrypt certificate,
+This library allows obtaining and updating (renewing) Let's Encrypt SSL certificate automatically for your Spring-Boot Web application.
+With this library, you do not need `CertBot` or docker-sidecar with i.e. `Traefik` to get Let's Encrypt certificate,
 everything will be done inside your Java application. **No JVM restart needed** when certificate gets updated.
 
 The library will **automatically**  :
-1. Obtain LetsEncrypt certificate on fresh start
+1. Obtain Let's Encrypt certificate on fresh start
 2. Store generated keys and certificate into single KeyStore (`server.ssl.keystore`)
-3. Renew LetsEncrypt certificate (it watches for certificate expiration date and updates it to new before old is expired)
+3. Renew Let's Encrypt certificate (it watches for certificate expiration date and updates it to new before old is expired)
 
 # Application requirements
 
-To perform HTTP-01 ACME challenge, the application must listen on port `80`, this library will automatically create
+To perform HTTP-01 ACME (Automatic Certificate Management Environment) challenge, the application must listen on port `80`, this library will automatically create
 Tomcat connector to this port, so the only thing needed on your side is to open `80` port for the application.
 
 # Servlet containers supported (embedded)
@@ -30,7 +30,7 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 2. Declare `@Import(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class)` on your configuration
 3. Define following properties in your application configuration or environment:
     1. `lets-encrypt-helper.domain` the domain to issue certificate for
-    2. `lets-encrypt-helper.contact` your contact for LetsEncrypt (i.e. your email in format `mailto:john.doe@example.com`)
+    2. `lets-encrypt-helper.contact` your contact for Let's Encrypt (i.e. your email in format `mailto:john.doe@example.com`)
 4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
 
 
@@ -39,15 +39,15 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 
 | Property                                                   | Description                                                                                                  | Default value, if any  |
 |------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|------------------------|
-| server.ssl.key-store                                       | Path to the KeyStore, where LetsEncrypt certificates and account key are to be stored (or are already there) |                        |
+| server.ssl.key-store                                       | Path to the KeyStore, where Let's Encrypt certificates and account key are to be stored (or are already there) |                        |
 | server.ssl.key-store                                       | KeyStore type (i.e. PKCS12)                                                                                  |                        |
-| server.ssl.key-store-pasword                               | Password for KeyStore with LetsEncrypt certificate and account key                                           |                        |
-| server.ssl.key-alias                                       | LetsEncrypt certificate key alias in the keystore                                                            |                        |
+| server.ssl.key-store-pasword                               | Password for KeyStore with Let's Encrypt certificate and account key                                           |                        |
+| server.ssl.key-alias                                       | Let's Encrypt certificate key alias in the keystore                                                            |                        |
 | server.port                                                | Port (secure SSL/TLS) on which your application is deployed                                                  |                        |
 | lets-encrypt-helper.domain                                 | Your applications' domain (i.e. example.com)                                                                 |                        |
 | lets-encrypt-helper.contact                                | The contact of person responsible for the domain (i.e. mailto:john@example.com)                              |                        |
 | lets-encrypt-helper.account-key-alias                      | Account key alias                                                                                            | letsencrypt-user       |
-| lets-encrypt-helper.letsencrypt-server                     | LetsEncrypt server to use                                                                                    | acme://letsencrypt.org |
+| lets-encrypt-helper.letsencrypt-server                     | Let's Encrypt server to use                                                                                    | acme://letsencrypt.org |
 | lets-encrypt-helper.key-size                               | Certificate and Account key RSA key size                                                                     | 2048                   |
 | lets-encrypt-helper.update-before-expiry                   | Start trying to update certficate this time before expiration                                                | P7D (7 days)           |
 | lets-encrypt-helper.busy-wait-interval                     | Busy wait interval for thread that checks if the certificate is valid                                        | P1M (1 minute)         |
@@ -72,12 +72,12 @@ server:
     enabled: true # Important to place this explicitly
 lets-encrypt-helper:
   domain: my-domain.example.com # Domain to issue certificate for
-  contact: mailto:john.doe@mymail.example.com # Your contact for LetsEncrypt
+  contact: mailto:john.doe@mymail.example.com # Your contact for Let's Encrypt
 ```
 
 **Note:** On your server ensure you have opened port `80` for Java (i.e. in Firewall) and Java can bind to it (i.e. follow [Linux allow listening to low port without sudo](https://superuser.com/a/892391) to open ports 80,443 for `java`)
 
-**Example project** with SSL and LetsEncrypt management using this library **[is located here](example)**
+**Example project** with SSL and Let's Encrypt management using this library **[is located here](example)**
 
 ## Alternative
 
