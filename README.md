@@ -2,7 +2,11 @@
 
 # What is this
 
-This library allows obtaining and updating (renewing) Let's Encrypt SSL certificate automatically for your Spring-Boot Web application.
+If you have ever tried getting Let's Encrypt certificate for Spring Boot application, you know that it is painful as
+it involves using either CertBot or Docker-sidecar/Cron-job to manage certificate lifecycle. This library solves these
+problems by managing certificate lifecycle directly in Java code with the help of awesome [Acme4j](https://github.com/shred/acme4j) library.
+
+This project allows obtaining and updating (renewing) Let's Encrypt SSL certificate automatically for your Spring-Boot Web application.
 With this library, you do not need `CertBot` or docker-sidecar with i.e. `Traefik` to get Let's Encrypt certificate,
 everything will be done inside your Java application. **No JVM restart needed** when certificate gets updated.
 
