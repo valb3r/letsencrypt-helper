@@ -1,9 +1,9 @@
 server:
   port: 443
   ssl:
-    key-store: letsencrypt-keystore
+    key-store: letsencrypt-keystore # Path to KeyStore where HTTPS certificate and user account keys are stored
     key-store-password: change-me # Password for KeyStore protection
-    key-store-type: PKCS12
+    key-store-type: PKCS12 # Preferably PKCS12 keystore
     key-alias: tomcat # Certificate name in KeyStore
     enabled: true # Important to place this explicitly
 lets-encrypt-helper:

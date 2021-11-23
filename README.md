@@ -52,7 +52,7 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 | lets-encrypt-helper.letsencrypt-server                     | Let's Encrypt server to use                                                                                    | acme://letsencrypt.org |
 | lets-encrypt-helper.key-size                               | Certificate and Account key RSA key size                                                                     | 2048                   |
 | lets-encrypt-helper.update-before-expiry                   | Start trying to update certficate this time before expiration                                                | P7D (7 days)           |
-| lets-encrypt-helper.busy-wait-interval                     | Busy wait interval for thread that checks if the certificate is valid                                        | P1M (1 minute)         |
+| lets-encrypt-helper.busy-wait-interval                     | Busy wait interval for thread that checks if the certificate is valid                                        | PT1M (1 minute)         |
 | lets-encrypt-helper.account-cert-validity                  | Validity duration for Account key                                                                            | P3650D (3650 days)     |
 | lets-encrypt-helper.enabled                                | Is the helper enabled                                                                                        | true                   |
 | lets-encrypt-helper.development-only.http01-challenge-port | For development only, port for HTTP-01 ACME challenge                                                        | 80                     |
@@ -86,3 +86,9 @@ lets-encrypt-helper:
 The library is itself just 1 Java class. You can add library dependencies and 
 [this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/src/main/java/com/github/valb3r/letsencrypthelper/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
 to your configiration
+
+
+## Testing locally
+
+The library has integration tests in [src/test/java](src/test/java) directory. One can adapt these tests
+according to own needs, as they use Pebble - LetsEncrypt testing server.
