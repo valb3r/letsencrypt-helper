@@ -1,1 +1,9 @@
 rootProject.name = 'letsencrypt-helper'
+
+include 'tomcat'
+include 'jetty'
+include 'tests-common'
+
+project(":tomcat").projectDir = file("tomcat")
+project(":jetty").projectDir = file("jetty")
+project(":tests-common").projectDir = file("tests-common")
