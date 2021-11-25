@@ -84,9 +84,11 @@ lets-encrypt-helper:
 
 ## Alternative
 
-The library is itself just 1 Java class. You can add library dependencies and 
-[this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/src/main/java/com/github/valb3r/letsencrypthelper/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
-to your configiration
+The library is itself just 1 Java class. You can add library dependencies and: 
+ - [For Tomcat this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/src/main/java/com/github/valb3r/letsencrypthelper/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
+to your configuration
+ - [For Jetty this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/src/main/java/com/github/valb3r/letsencrypthelper/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
+to your configuration
 
 
 ## Testing locally
