@@ -5,8 +5,6 @@ markdown: kramdown
 
 remote_theme: pages-themes/cayman@v0.2.0
 
-google_analytics: G-7EKEKLZ6C0
-
 
 plugins:
   - jekyll-remote-theme
