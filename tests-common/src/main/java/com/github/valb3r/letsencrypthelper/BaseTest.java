@@ -97,7 +97,7 @@ abstract public class BaseTest {
     }
 
     @Configuration
-    @ComponentScan({"com.github.valb3r.letsencrypthelper.tomcat.dummyapp"})
+    @ComponentScan({"com.github.valb3r.letsencrypthelper.tomcat.dummyapp", "com.github.valb3r.letsencrypthelper.jetty.dummyapp"})
     public static class TestConfig {
     }
 }
