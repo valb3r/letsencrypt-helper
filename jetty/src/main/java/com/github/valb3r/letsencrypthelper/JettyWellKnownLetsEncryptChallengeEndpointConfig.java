@@ -1,8 +1,5 @@
 package com.github.valb3r.letsencrypthelper;
 
-import org.apache.catalina.connector.Connector;
-import org.apache.coyote.http11.AbstractHttp11Protocol;
-import org.apache.tomcat.util.net.SSLHostConfig;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -12,7 +9,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.NetworkTrafficServerConnector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.shredzone.acme4j.Account;
 import org.shredzone.acme4j.AccountBuilder;
 import org.shredzone.acme4j.Authorization;
@@ -28,13 +29,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.autoconfigure.web.embedded.EmbeddedWebServerFactoryCustomizerAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.embedded.JettyWebServerFactoryCustomizer;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.jetty.ConfigurableJettyWebServerFactory;
 import org.springframework.boot.web.embedded.jetty.JettyServerCustomizer;
-import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -63,7 +60,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -72,6 +69,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * This configuration class is responsible for maintaining KeyStore with LetsEncrypt certificates.
@@ -175,38 +173,30 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
             return;
         }
 
-
-        for (Connector connector : server.getConnectors()) {connector.getConnectionFactory()
-            connector.getConnectedEndPoints().forEach(it -> it.getConnection());
+        var sslContextFactories = new ArrayList<SslContextFactory>();
+        for (Connector connector : server.getConnectors()) {
+            var factory = connector.getConnectionFactory(SslConnectionFactory.class);
+            if (null == factory) {
+                continue;
+            }
+            var ctx = factory.getSslContextFactory();
+            if (!ctx.getKeyStorePath().contains(serverProperties.getSsl().getKeyStore())
+                    || !ctx.getCertAlias().equals(serverProperties.getSsl().getKeyAlias())) {
+                continue;
+            }
+            sslContextFactories.add(ctx);
         }
-        var protocolHandler = connector.getProtocolHandler();
-        if (!(protocolHandler instanceof AbstractHttp11Protocol)) {
-            logger.info("Impossible to customize protocol {} for connector {}", connector.getProtocolHandler(), connector);
-            return;
-        }
 
-        var protocol = (AbstractHttp11Protocol<?>) protocolHandler;
-
-        var sslConfig = Arrays.stream(protocol.findSslHostConfigs())
-                .filter(it -> null != it.getCertificateKeystoreFile())
-                .filter(it -> it.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore()))
-                .filter(it -> serverProperties.getSsl().getKeyStorePassword().equals(it.getCertificateKeystorePassword()))
-                .findFirst()
-                .orElse(null);
-
-        if (null == sslConfig) {
-            logger.info("Protocol {}:{} has different KeyStore file", protocol.getClass().getCanonicalName(), protocol.getPort());
+        if (sslContextFactories.isEmpty()) {
+            logger.info("No SSL Context factories found");
             return;
         }
 
         createBasicKeystoreIfMissing();
 
-        TargetProtocol observe = createObservableProtocol(protocol, sslConfig);
-        if (observe == null) {
-            return;
-        }
-
-        observedProtocols.add(observe);
+        observedProtocols.addAll(
+                sslContextFactories.stream().map(this::createObservableProtocol).collect(Collectors.toList())
+        );
         if (customized.compareAndSet(false, true)) {
             new Thread(this::letsEncryptCheckCertValidityAndRotateIfNeeded, "LetsEncrypt Certificate Watcher").start();
         }
@@ -264,28 +254,26 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         logger.info("Created basic (dummy cert, real account/domain keys) KeyStore: {}", keystoreFile.getAbsolutePath());
     }
 
-    private TargetProtocol createObservableProtocol(AbstractHttp11Protocol<?> protocol, SSLHostConfig sslConfig) {
-        var observe = new TargetProtocol(sslConfig, protocol);
+    private TargetProtocol createObservableProtocol(SslContextFactory contextFactory) {
+        var observe = new TargetProtocol(contextFactory);
         var ks = tryToReadKeystore();
         var cert = tryToReadCertificate(observe, ks);
         if (null == cert) {
             logger.warn(
                     "For Protocol {}:{} unable to read certificate from {}",
-                    protocol.getClass().getCanonicalName(),
-                    protocol.getPort(),
-                    sslConfig.getCertificateKeystoreFile()
+                    contextFactory.getClass().getCanonicalName(),
+                    contextFactory.getProtocol(),
+                    contextFactory.getKeyStorePath()
             );
             return null;
         }
         return observe;
     }
 
-    private JettyServerCustomizer httpToHttpsRedirectConnector() {
-        Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-        connector.setScheme("http");
+    private JettyServerCustomizer httpToHttpsRedirectConnector(Server server) {
+        var connector = new SelectChannelConnector(server);
         connector.setPort(http01ChallengePort);
-        connector.setSecure(false);
-        connector.setRedirectPort(serverPort);
+        connector.set(serverPort);
         return connector;
     }
 
@@ -515,7 +503,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
             throw new IllegalStateException("Missing KeyStore: " + serverProperties.getSsl().getKeyStore());
         }
 
-        String keyAlias = protocol.getHostConfig().getCertificateKeyAlias();
+        String keyAlias = protocol.getSslContextFactory().getCertAlias();
         Certificate certificate;
         try {
             certificate = ks.getCertificate(keyAlias);
@@ -564,20 +552,14 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
     }
 
     private static class TargetProtocol {
-        private final SSLHostConfig hostConfig;
-        private final AbstractHttp11Protocol protocol;
+        private final SslContextFactory sslContextFactory;
 
-        public TargetProtocol(SSLHostConfig hostConfig, AbstractHttp11Protocol protocol) {
-            this.hostConfig = hostConfig;
-            this.protocol = protocol;
+        public TargetProtocol(SslContextFactory sslContextFactory) {
+            this.sslContextFactory = sslContextFactory;
         }
 
-        public SSLHostConfig getHostConfig() {
-            return hostConfig;
-        }
-
-        public AbstractHttp11Protocol getProtocol() {
-            return protocol;
+        public SslContextFactory getSslContextFactory() {
+            return sslContextFactory;
         }
     }
 }
