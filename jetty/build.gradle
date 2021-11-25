@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     compileOnly "org.springframework:spring-context:$spring"
-    compileOnly "org.springframework:spring-webmvc:$spring"
+    compileOnly ("org.springframework:spring-webmvc:$spring")
     compileOnly "org.springframework.boot:spring-boot-autoconfigure:$springBoot"
     compileOnly "org.eclipse.jetty:jetty-server:$jettyEmbed"
     compileOnly "org.eclipse.jetty:jetty-servlet:$jettyEmbed"
@@ -20,7 +20,10 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastle"
 
 
-    testImplementation "org.springframework.boot:spring-boot-starter-web:$springBoot"
+    testImplementation project(":tests-common")
+    testImplementation ("org.springframework.boot:spring-boot-starter-web:$springBoot") {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
     testImplementation "org.springframework.boot:spring-boot-starter-jetty:$springBoot"
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBoot"
 

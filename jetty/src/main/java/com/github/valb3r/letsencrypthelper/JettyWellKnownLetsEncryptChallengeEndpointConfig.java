@@ -8,8 +8,10 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.NetworkTrafficServerConnector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
@@ -107,7 +109,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
     // End
 
     private final Map<String, String> challengeTokens = new ConcurrentHashMap<>();
-    private final List<TargetProtocol> observedProtocols = new CopyOnWriteArrayList<>();
+    private final List<TargetProtocol> observedEndpoints = new CopyOnWriteArrayList<>();
     private final AtomicBoolean customized = new AtomicBoolean();
 
     /**
@@ -194,7 +196,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
         createBasicKeystoreIfMissing();
 
-        observedProtocols.addAll(
+        observedEndpoints.addAll(
                 sslContextFactories.stream().map(this::createObservableProtocol).collect(Collectors.toList())
         );
         if (customized.compareAndSet(false, true)) {
@@ -204,7 +206,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (enabled && observedProtocols.isEmpty()) {
+        if (enabled && observedEndpoints.isEmpty()) {
             throw new IllegalStateException("Failed to configure LetsEncrypt");
         }
     }
@@ -227,9 +229,9 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
     @Bean
     WebServerFactoryCustomizer<ConfigurableJettyWebServerFactory> servletContainer() {
-        return server -> {
-            if (server != null) {
-                server.addServerCustomizers(httpToHttpsRedirectConnector());
+        return factory -> {
+            if (factory != null) {
+                factory.addServerCustomizers(this::httpToHttpsRedirectConnector);
             }
         };
     }
@@ -270,10 +272,14 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         return observe;
     }
 
-    private JettyServerCustomizer httpToHttpsRedirectConnector(Server server) {
-        var connector = new SelectChannelConnector(server);
+    private Connector httpToHttpsRedirectConnector(Server server) {
+        HttpConfiguration httpConfiguration = new HttpConfiguration();
+        httpConfiguration.setSecurePort(serverPort);
+        httpConfiguration.setSecureScheme(HttpScheme.HTTPS.asString());
+
+        ServerConnector connector = new ServerConnector(server);
+        connector.addConnectionFactory(new HttpConnectionFactory(httpConfiguration));
         connector.setPort(http01ChallengePort);
-        connector.set(serverPort);
         return connector;
     }
 
@@ -305,13 +311,13 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
     private void executeCheckCertValidityAndRotateIfNeeded() {
         var ks = tryToReadKeystore();
-        for (var protocol : observedProtocols) {
-            var cert = tryToReadCertificate(protocol, ks);
+        for (var endpoint : observedEndpoints) {
+            var cert = tryToReadCertificate(endpoint, ks);
             if (null == cert) {
                 logger.warn("Certificate is null on {}:{} from {}",
-                        protocol.getProtocol().getClass(),
-                        protocol.getProtocol().getPort(),
-                        protocol.getHostConfig().getCertificateKeystoreFile()
+                        endpoint.getSslContextFactory().getClass(),
+                        endpoint.getSslContextFactory().getProtocol(),
+                        endpoint.getSslContextFactory().getKeyStorePath()
                 );
                 continue;
             }
@@ -322,8 +328,8 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
             try {
                 updateCertificateAndKeystore(ks);
-                protocol.getProtocol().reloadSslHostConfigs();
-            } catch (RuntimeException ex) {
+                endpoint.getSslContextFactory().reload(it -> {});
+            } catch (Exception ex) {
                 logger.warn("Failed updating KeyStore", ex);
             }
         }

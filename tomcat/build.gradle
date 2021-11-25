@@ -8,8 +8,6 @@ repositories {
 }
 
 dependencies {
-    implementation project(":tests-common")
-
     compileOnly "org.springframework:spring-context:$spring"
     compileOnly "org.springframework:spring-webmvc:$spring"
     compileOnly "org.springframework.boot:spring-boot-autoconfigure:$springBoot"
@@ -21,6 +19,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastle"
 
 
+    testImplementation project(":tests-common")
     testImplementation "org.springframework.boot:spring-boot-starter-web:$springBoot"
     testImplementation "org.springframework.boot:spring-boot-starter-tomcat:$springBoot"
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBoot"

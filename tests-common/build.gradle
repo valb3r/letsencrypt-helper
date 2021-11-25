@@ -7,18 +7,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.shredzone.acme4j:acme4j-client:2.12'
-    implementation 'org.shredzone.acme4j:acme4j-utils:2.12'
+    compileOnly "org.springframework:spring-webmvc:$spring"
+    compileOnly "org.springframework.boot:spring-boot-starter-test:$springBoot"
 
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
-
-
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.5.6'
-    implementation 'org.springframework.boot:spring-boot-starter-tomcat:2.5.6'
-    implementation 'org.springframework.boot:spring-boot-starter-test:2.5.6'
-
-    implementation 'org.awaitility:awaitility:4.1.1'
-    implementation 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    implementation 'org.testcontainers:junit-jupiter:1.16.2'
-    implementation 'org.assertj:assertj-core:3.21.0'
+    implementation "org.awaitility:awaitility:$awaitability"
+    implementation "org.junit.jupiter:junit-jupiter-engine:$jupiter"
+    implementation "org.testcontainers:junit-jupiter:$testContainers"
+    implementation "org.assertj:assertj-core:$assertj"
 }
