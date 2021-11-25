@@ -20,8 +20,8 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 
 # Servlet containers supported (embedded)
 
-- [Tomcat](tomcat)
-- [Jetty](jetty)
+- Tomcat
+- Jetty
 
 # Usage
 
@@ -150,7 +150,7 @@ lets-encrypt-helper:
 
 **Note:** On your server ensure you have opened port `80` for Java (i.e. in Firewall) and Java can bind to it (i.e. follow [Linux allow listening to low port without sudo](https://superuser.com/a/892391) to open ports 80,443 for `java`)
 
-**Example project** with SSL and Let's Encrypt management using this library **[is located here](example)**
+**Example project** with SSL and Let's Encrypt management using this library **[for Tomcat is located here](https://github.com/valb3r/letsencrypt-helper/tree/master/example)**
 
 ## Alternative
 
@@ -164,7 +164,7 @@ The library is itself just 1 Java class. You can add library dependencies and:
 ## Testing locally
 
 The library has integration tests in:
-- [tomcat/src/test/java](tomcat/src/test/java)
-- [jetty/src/test/java](jetty/src/test/java)
+- [tomcat/src/test/java](https://github.com/valb3r/letsencrypt-helper/tree/master/tomcat/src/test/java/com/github/valb3r/letsencrypthelper/tomcat)
+- [jetty/src/test/java](https://github.com/valb3r/letsencrypt-helper/tree/master/jetty/src/test/java/com/github/valb3r/letsencrypthelper/jetty)
 
 directories. One can adapt these tests according to own needs, as they use Pebble - LetsEncrypt testing server.
