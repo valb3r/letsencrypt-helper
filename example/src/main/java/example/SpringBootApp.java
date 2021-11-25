@@ -1,6 +1,6 @@
 package example;
 
-import com.github.valb3r.letsencrypthelper.TomcatWellKnownLetsEncryptChallengeEndpointConfig;
+import com.github.valb3r.letsencrypthelper.tomcat.TomcatWellKnownLetsEncryptChallengeEndpointConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;

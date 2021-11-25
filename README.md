@@ -27,14 +27,84 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 
 ## From JitPack maven repository
 
-1. Import this library:
-    1. [Add JitPack repository to your dependency management system](https://jitpack.io/)
-    2. Add this library to your dependencies, [like it is shown here](https://jitpack.io/#valb3r/letsencrypt-helper/0.1.4.1)
-2. Declare `@Import(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class)` on your configuration
-3. Define following properties in your application configuration or environment:
-    1. `lets-encrypt-helper.domain` the domain to issue certificate for
-    2. `lets-encrypt-helper.contact` your contact for Let's Encrypt (i.e. your email in format `mailto:john.doe@example.com`)
-4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
+### 1. Import this library:
+
+#### For Tomcat:
+##### Gradle:
+```groovy
+ allprojects {
+     repositories {
+         ...
+         maven { url 'https://jitpack.io' }
+     }
+ }
+
+dependencies {
+   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.2.0'
+}
+```
+##### Maven:
+```xml
+<repositories>
+     <repository>
+         <id>jitpack.io</id>
+         <url>https://jitpack.io</url>
+     </repository>
+ </repositories>
+
+<dependencies>
+   <dependency>
+      <groupId>com.github.valb3r.letsencrypt-helper</groupId>
+      <artifactId>letsencrypt-helper-tomcat</artifactId>
+      <version>0.2.0</version>
+   </dependency>
+</dependencies>
+```
+
+
+#### For Jetty:
+##### Gradle:
+```groovy
+ allprojects {
+     repositories {
+         ...
+         maven { url 'https://jitpack.io' }
+     }
+ }
+
+dependencies {
+   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-jetty:0.2.0'
+}
+```
+##### Maven:
+```xml
+<repositories>
+     <repository>
+         <id>jitpack.io</id>
+         <url>https://jitpack.io</url>
+     </repository>
+ </repositories>
+
+<dependencies>
+   <dependency>
+      <groupId>com.github.valb3r.letsencrypt-helper</groupId>
+      <artifactId>letsencrypt-helper-jetty</artifactId>
+      <version>0.2.0</version>
+   </dependency>
+</dependencies>
+```
+
+### 2. Declare on your configuration
+#### Tomcat:
+`@Import(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class)`
+
+#### Jetty:
+`@Import(JettyWellKnownLetsEncryptChallengeEndpointConfig.class)`
+
+### 3. Define following properties in your application configuration or environment:
+ 1. `lets-encrypt-helper.domain` the domain to issue certificate for
+ 2. `lets-encrypt-helper.contact` your contact for Let's Encrypt (i.e. your email in format `mailto:john.doe@example.com`)
+### 4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
 
 
 ## Configuration
