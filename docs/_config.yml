@@ -1,0 +1,5 @@
+domain: letsencrypt-helper.github.io
+url: https://letsencrypt-helper.github.io
+baseurl: /letsencrypt-helper/
+markdown: kramdown
+remote_theme: rundocs/jekyll-rtd-theme
