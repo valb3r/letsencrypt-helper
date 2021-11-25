@@ -155,9 +155,9 @@ lets-encrypt-helper:
 ## Alternative
 
 The library is itself just 1 Java class. You can add library dependencies and: 
- - [For Tomcat this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/tomcat/src/main/java/com/github/valb3r/letsencrypthelper/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
+ - [For Tomcat this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/tomcat/src/main/java/com/github/valb3r/letsencrypthelper/tomcat/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
 to your configuration
- - [For Jetty this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/jetty/src/main/java/com/github/valb3r/letsencrypthelper/TomcatWellKnownLetsEncryptChallengeEndpointConfig.java)
+ - [For Jetty this java file](https://github.com/valb3r/letsencrypt-helper/blob/master/jetty/src/main/java/com/github/valb3r/letsencrypthelper/jetty/JettyWellKnownLetsEncryptChallengeEndpointConfig.java)
 to your configuration
 
 
@@ -166,4 +166,5 @@ to your configuration
 The library has integration tests in:
  - [tomcat/src/test/java](tomcat/src/test/java) 
  - [jetty/src/test/java](jetty/src/test/java)
+
 directories. One can adapt these tests according to own needs, as they use Pebble - LetsEncrypt testing server.
