@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly "org.springframework:spring-context:$spring"
+    compileOnly ("org.springframework:spring-webmvc:$spring")
+    compileOnly "org.springframework.boot:spring-boot-autoconfigure:$springBoot"
+    compileOnly "org.eclipse.jetty:jetty-server:$jettyEmbed"
+    compileOnly "org.eclipse.jetty:jetty-servlet:$jettyEmbed"
+
+    implementation "org.shredzone.acme4j:acme4j-client:$acme4j"
+    implementation "org.shredzone.acme4j:acme4j-utils:$acme4j"
+
+    implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastle"
+
+
+    testImplementation project(":tests-common")
+    testImplementation ("org.springframework.boot:spring-boot-starter-web:$springBoot") {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+    testImplementation "org.springframework.boot:spring-boot-starter-jetty:$springBoot"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBoot"
+
+    testImplementation "org.awaitility:awaitility:$awaitability"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:$jupiter"
+    testImplementation "org.testcontainers:junit-jupiter:$testContainers"
+    testImplementation "org.assertj:assertj-core:$assertj"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'com.github.valb3r'
+            artifactId = 'letsencrypt-helper-jetty'
+            version = version
+
+            from components.java
+        }
+    }
+}
