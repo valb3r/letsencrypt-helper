@@ -30,6 +30,8 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
 ### 1. Import this library:
 
 #### For Tomcat:
+
+
 ##### Gradle:
 ```groovy
  allprojects {
@@ -63,6 +65,8 @@ dependencies {
 
 
 #### For Jetty:
+
+
 ##### Gradle:
 ```groovy
  allprojects {
@@ -76,6 +80,8 @@ dependencies {
    implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-jetty:0.2.0'
 }
 ```
+
+
 ##### Maven:
 ```xml
 <repositories>
@@ -94,17 +100,22 @@ dependencies {
 </dependencies>
 ```
 
+
 ### 2. Declare on your configuration
+
 
 #### Tomcat:
 `@Import(TomcatWellKnownLetsEncryptChallengeEndpointConfig.class)`
 
+
 #### Jetty:
 `@Import(JettyWellKnownLetsEncryptChallengeEndpointConfig.class)`
+
 
 ### 3. Define following properties in your application configuration or environment:
 1. `lets-encrypt-helper.domain` the domain to issue certificate for
 2. `lets-encrypt-helper.contact` your contact for Let's Encrypt (i.e. your email in format `mailto:john.doe@example.com`)
+
 
 ### 4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
 
@@ -133,6 +144,7 @@ dependencies {
 
 ### Example configuration
 
+
 Launch your application with `-Dspring.profiles.active=ssl`
 
 `application-ssl.yaml`:
@@ -153,6 +165,7 @@ lets-encrypt-helper:
 **Note:** On your server ensure you have opened port `80` for Java (i.e. in Firewall) and Java can bind to it (i.e. follow [Linux allow listening to low port without sudo](https://superuser.com/a/892391) to open ports 80,443 for `java`)
 
 **Example project** with SSL and Let's Encrypt management using this library **[for Tomcat is located here](https://github.com/valb3r/letsencrypt-helper/tree/master/example)**
+
 
 ## Alternative
 
