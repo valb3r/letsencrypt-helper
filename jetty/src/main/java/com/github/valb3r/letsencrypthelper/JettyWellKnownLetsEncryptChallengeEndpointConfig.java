@@ -272,7 +272,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         return observe;
     }
 
-    private Connector httpToHttpsRedirectConnector(Server server) {
+    private void httpToHttpsRedirectConnector(Server server) {
         HttpConfiguration httpConfiguration = new HttpConfiguration();
         httpConfiguration.setSecurePort(serverPort);
         httpConfiguration.setSecureScheme(HttpScheme.HTTPS.asString());
@@ -280,7 +280,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         ServerConnector connector = new ServerConnector(server);
         connector.addConnectionFactory(new HttpConnectionFactory(httpConfiguration));
         connector.setPort(http01ChallengePort);
-        return connector;
+        server.addConnector(connector);
     }
 
     private File getKeystoreFile() {
