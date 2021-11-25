@@ -101,9 +101,12 @@ dependencies {
 #### Jetty:
 `@Import(JettyWellKnownLetsEncryptChallengeEndpointConfig.class)`
 
+
 ### 3. Define following properties in your application configuration or environment:
  1. `lets-encrypt-helper.domain` the domain to issue certificate for
  2. `lets-encrypt-helper.contact` your contact for Let's Encrypt (i.e. your email in format `mailto:john.doe@example.com`)
+
+
 ### 4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
 
 
