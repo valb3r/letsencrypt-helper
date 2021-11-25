@@ -1,4 +1,4 @@
-package com.github.valb3r.letsencrypthelper;
+package com.github.valb3r.letsencrypthelper.jetty;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;

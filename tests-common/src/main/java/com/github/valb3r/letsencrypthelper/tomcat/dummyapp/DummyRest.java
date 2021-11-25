@@ -1,4 +1,4 @@
-package com.github.valb3r.letsencrypthelper.dummyapp;
+package com.github.valb3r.letsencrypthelper.tomcat.dummyapp;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

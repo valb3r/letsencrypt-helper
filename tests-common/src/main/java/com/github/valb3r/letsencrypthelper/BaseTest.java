@@ -14,7 +14,6 @@ import org.testcontainers.containers.GenericContainer;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -98,7 +97,7 @@ abstract public class BaseTest {
     }
 
     @Configuration
-    @ComponentScan({ "com.github.valb3r.letsencrypthelper.dummyapp" })
+    @ComponentScan({"com.github.valb3r.letsencrypthelper.tomcat.dummyapp"})
     public static class TestConfig {
     }
 }

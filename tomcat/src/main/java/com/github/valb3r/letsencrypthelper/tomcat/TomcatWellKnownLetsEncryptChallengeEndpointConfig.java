@@ -1,4 +1,4 @@
-package com.github.valb3r.letsencrypthelper;
+package com.github.valb3r.letsencrypthelper.tomcat;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.AbstractHttp11Protocol;
