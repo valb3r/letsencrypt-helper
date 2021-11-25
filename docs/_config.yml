@@ -3,3 +3,4 @@ url: https://valb3r.github.io/letsencrypt-helper/
 baseurl: /letsencrypt-helper/
 markdown: kramdown
 remote_theme: rundocs/jekyll-rtd-theme
+google_analytics: G-7EKEKLZ6C0
