@@ -1,5 +1,5 @@
-domain: letsencrypt-helper.github.io
-url: https://letsencrypt-helper.github.io
+domain: valb3r.github.io
+url: https://valb3r.github.io/letsencrypt-helper/
 baseurl: /letsencrypt-helper/
 markdown: kramdown
 remote_theme: rundocs/jekyll-rtd-theme
