@@ -102,6 +102,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
     private final String accountKeyAlias;
     private final Duration accountCertValidity;
     private final boolean enabled;
+    private final boolean returnNullModel;
     private final ServerProperties serverProperties;
 
     // Development only properties, you can't change these for production
@@ -123,6 +124,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
      * @param updateBeforeExpiry - Start trying to update certificate {@code updateBeforeExpiry} time before it expires
      * @param busyWaitInterval - How frequently to check if certificate needs update (scheduled-alike busy wait)
      * @param enabled - If the helper is enabled (for i.e. development)
+     * @param returnNullModel - If challenge endpoint should return null model, default true
      */
     public JettyWellKnownLetsEncryptChallengeEndpointConfig(
             ServerProperties serverProperties,
@@ -136,6 +138,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
             @Value("${lets-encrypt-helper.busy-wait-interval:PT1M}") Duration busyWaitInterval,
             @Value("${lets-encrypt-helper.account-cert-validity:P3650D}") Duration accountCertValidity,
             @Value("${lets-encrypt-helper.enabled:true}") boolean enabled,
+            @Value("${lets-encrypt-helper.return-null-model:true}") boolean returnNullModel,
             @Value("${lets-encrypt-helper.development-only.http01-challenge-port:80}") int http01ChallengePort
     ) {
         Security.addProvider(new BouncyCastleProvider());
@@ -150,6 +153,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         this.busyWaitInterval = busyWaitInterval;
         this.accountCertValidity = accountCertValidity;
         this.enabled = enabled;
+        this.returnNullModel = returnNullModel;
         this.http01ChallengePort = http01ChallengePort;
 
         if (null == this.serverProperties.getSsl()) {
@@ -224,7 +228,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
     @Bean
     WellKnownLetsEncryptChallenge wellKnownLetsEncryptChallenge() {
-        return new WellKnownLetsEncryptChallenge(challengeTokens);
+        return new WellKnownLetsEncryptChallenge(challengeTokens, returnNullModel);
     }
 
     @Bean
@@ -560,21 +564,25 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
     public static class WellKnownLetsEncryptChallenge extends AbstractController {
 
         private final Map<String, String> challengeToken;
+        private final boolean returnNullModel;
 
-        public WellKnownLetsEncryptChallenge(Map<String, String> challengeToken) {
+        public WellKnownLetsEncryptChallenge(Map<String, String> challengeToken, boolean returnNullModel) {
             this.challengeToken = challengeToken;
+            this.returnNullModel = returnNullModel;
         }
 
         @Override
         protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) {
-            var res = new ModelAndView();
             var split = request.getServletPath().split("/");
             var token = split[split.length - 1];
             response.setStatus(HttpStatus.OK.value());
             try {
                 response.getWriter().write(challengeToken.get(token));
                 response.getWriter().flush();
-                return res;
+                if (returnNullModel) {
+                    return null;
+                }
+                return new ModelAndView();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
