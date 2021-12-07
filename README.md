@@ -110,6 +110,9 @@ dependencies {
 ### 4. Configure SSL as usual for Tomcat+TLS using `server.ssl.keystore` for certificate and keys storage
 
 
+### 5. Ensure your security layer (i.e. Spring security) allows anonymous access to `/.well-known/acme-challenge/*` paths
+
+
 ## Configuration
 
 
