@@ -393,6 +393,19 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
                     .create(session);
 
             Order order = account.newOrder().domains(domain).create();
+            org.shredzone.acme4j.Certificate certificate = authorizeOrder(domainKey, order);
+
+            ks.setKeyEntry(serverProperties.getSsl().getKeyAlias(), domainKey.getPrivate(), keyPassword().toCharArray(), new Certificate[] { certificate.getCertificate() });
+            saveKeystore(getKeystoreFile(), ks);
+            logger.info("KeyStore updated");
+        } catch (AcmeException | IOException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
+            logger.warn("Failed updating certificate", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private org.shredzone.acme4j.Certificate authorizeOrder(KeyPair domainKey, Order order) throws AcmeException, IOException {
+        try {
             logger.info("Starting order challenges");
             for (var auth : order.getAuthorizations()) {
                 if (auth.getStatus() != Status.PENDING) {
@@ -417,23 +430,24 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
             finalizeOrder(order, csr);
             logger.info("Order finalized");
-
-            var certificate = order.getCertificate();
-            if (null == certificate) {
-                throw new IllegalStateException("Failed to obtain certificate");
-            }
-            ks.setKeyEntry(serverProperties.getSsl().getKeyAlias(), domainKey.getPrivate(), keyPassword().toCharArray(), new Certificate[] { certificate.getCertificate() });
-            saveKeystore(getKeystoreFile(), ks);
-            logger.info("KeyStore updated");
-        } catch (AcmeException | IOException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
-            throw new RuntimeException(e);
+        } catch (RuntimeException ex) {
+            logger.warn("Order processing failed", ex);
+            dumpOrderStatusOnError(order);
         }
+        var certificate = order.getCertificate();
+        if (null == certificate) {
+            dumpOrderStatusOnError(order);
+            throw new IllegalStateException("Failed to obtain certificate");
+        }
+        return certificate;
     }
 
     private void finalizeOrder(Order order, byte[] csrb) throws AcmeException {
         try {
             order.execute(csrb);
         } catch (AcmeException ex) {
+            logger.warn("Order finalize failed", ex);
+            dumpOrderStatusOnError(order);
             order.update();
             logger.warn("Failed order execution: {}", order.getError(), ex);
             throw ex;
@@ -528,6 +542,16 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
     private String keyPassword() {
         return null == serverProperties.getSsl().getKeyPassword() ? serverProperties.getSsl().getKeyStorePassword() : serverProperties.getSsl().getKeyPassword();
+    }
+
+    private void dumpOrderStatusOnError(Order order) {
+        logger.warn("Order action failed, status is: {}, see actual order status here: {}", order.getStatus(), order.getLocation());
+        if (null == order.getAuthorizations()) {
+            return;
+        }
+        for (var auth : order.getAuthorizations()) {
+            logger.warn("Order {} authorization status is: {}, actual status here: {}", order.getIdentifiers(), auth.getStatus(), auth.getLocation());
+        }
     }
 
     public static class WellKnownLetsEncryptChallenge extends AbstractController {
