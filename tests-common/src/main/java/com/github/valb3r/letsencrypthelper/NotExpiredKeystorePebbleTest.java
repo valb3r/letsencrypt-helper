@@ -17,9 +17,9 @@ public abstract class NotExpiredKeystorePebbleTest extends BaseTest {
     @Test
     void testWhenNotExpiredKeystoreNoCertificateGranted() throws InterruptedException {
         assertThat(scheduleBeat).isLessThan(Duration.ofSeconds(10));
-        assertThat(callHelloAndGetIssuerDn()).isEqualTo("CN=not-expired-letsencrypt-java-helper");
+        assertThat(callHelloAndGetIssuerDn(1)).isEqualTo("CN=not-expired-letsencrypt-java-helper");
         launchPebbleContainers();
         Thread.sleep(TIMEOUT.toMillis());
-        assertThat(callHelloAndGetIssuerDn()).startsWith("CN=not-expired-letsencrypt-java-helper");
+        assertThat(callHelloAndGetIssuerDn(1)).startsWith("CN=not-expired-letsencrypt-java-helper");
     }
 }

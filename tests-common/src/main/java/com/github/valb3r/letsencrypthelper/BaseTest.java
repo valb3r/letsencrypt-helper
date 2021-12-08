@@ -66,10 +66,12 @@ abstract public class BaseTest {
         return null;
     }
 
-    protected String callHelloAndGetIssuerDn() {
+    protected String callHelloAndGetIssuerDn(Integer expectedChainSize) {
         var certs = httpGet(helloUrl(), "hello");
-        assertThat(certs).hasSize(1);
-        return ((X509Certificate) certs[0]).getIssuerDN().getName();
+        if (null != expectedChainSize) {
+            assertThat(certs).hasSize(expectedChainSize);
+        }
+        return ((X509Certificate) certs[0]).getIssuerDN().getName(); // Domain cert is first one
     }
 
     protected boolean available(int port) {
