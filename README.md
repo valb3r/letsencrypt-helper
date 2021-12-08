@@ -131,6 +131,7 @@ dependencies {
 | lets-encrypt-helper.update-before-expiry                   | Start trying to update certficate this time before expiration                                                            | P7D (7 days)           |
 | lets-encrypt-helper.busy-wait-interval                     | Busy wait interval for thread that checks if the certificate is valid                                                    | PT1M (1 minute)         |
 | lets-encrypt-helper.account-cert-validity                  | Validity duration for Account key                                                                                        | P3650D (3650 days)     |
+| lets-encrypt-helper.store-cert-chain                       | Store entire trust chain or only domain certificate (for browsers domain ceritificate is enough)                         | true                   |
 | lets-encrypt-helper.enabled                                | Is the helper enabled                                                                                                    | true                   |
 | lets-encrypt-helper.return-null-model                      | If challenge endpoint should return null model (i.e. `true` is sane default for cases with Thymeleaf rendering the page) | true                   |
 | lets-encrypt-helper.development-only.http01-challenge-port | For development only, port for HTTP-01 ACME challenge                                                                    | 80                     |

@@ -11,9 +11,9 @@ public abstract class NoKeystorePebbleTest extends BaseTest {
 
     @Test
     void testWhenNoKeystoreNewCertificateGranted() {
-        assertThat(callHelloAndGetIssuerDn()).isEqualTo("CN=letsencrypt-java-helper");
+        assertThat(callHelloAndGetIssuerDn(1)).isEqualTo("CN=letsencrypt-java-helper");
         launchPebbleContainers();
-        await().atMost(TIMEOUT).until(() -> callHelloAndGetIssuerDn().contains("Pebble"));
-        assertThat(callHelloAndGetIssuerDn()).startsWith("CN=Pebble Intermediate CA");
+        await().atMost(TIMEOUT).until(() -> callHelloAndGetIssuerDn(null).contains("Pebble"));
+        assertThat(callHelloAndGetIssuerDn(2)).startsWith("CN=Pebble Intermediate CA");
     }
 }

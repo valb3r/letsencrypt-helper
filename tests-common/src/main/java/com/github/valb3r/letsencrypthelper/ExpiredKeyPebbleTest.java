@@ -11,9 +11,9 @@ public abstract class ExpiredKeyPebbleTest extends BaseTest {
 
     @Test
     void testWhenExpiredKeystoreNewCertificateGranted() {
-        assertThat(callHelloAndGetIssuerDn()).isEqualTo("CN=expired-letsencrypt-java-helper");
+        assertThat(callHelloAndGetIssuerDn(1)).isEqualTo("CN=expired-letsencrypt-java-helper");
         launchPebbleContainers();
-        await().atMost(TIMEOUT).until(() -> callHelloAndGetIssuerDn().contains("Pebble"));
-        assertThat(callHelloAndGetIssuerDn()).startsWith("CN=Pebble Intermediate CA");
+        await().atMost(TIMEOUT).until(() -> callHelloAndGetIssuerDn(null).contains("Pebble"));
+        assertThat(callHelloAndGetIssuerDn(2)).startsWith("CN=Pebble Intermediate CA");
     }
 }

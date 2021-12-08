@@ -95,6 +95,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     private final Duration busyWaitInterval;
     private final String accountKeyAlias;
     private final Duration accountCertValidity;
+    private final boolean storeCertChain;
     private final boolean enabled;
     private final boolean returnNullModel;
     private final ServerProperties serverProperties;
@@ -117,6 +118,8 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
      * @param keySize - RSA Key size for Domain and Account keys that are to be generated
      * @param updateBeforeExpiry - Start trying to update certificate {@code updateBeforeExpiry} time before it expires
      * @param busyWaitInterval - How frequently to check if certificate needs update (scheduled-alike busy wait)
+     * @param accountCertValidity - How long account key is valid
+     * @param storeCertChain - Store entire certificate chain or a single certificate
      * @param enabled - If the helper is enabled (for i.e. development)
      * @param returnNullModel - If challenge endpoint should return null model, default true
      */
@@ -131,6 +134,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             @Value("${lets-encrypt-helper.update-before-expiry:P7D}") Duration updateBeforeExpiry,
             @Value("${lets-encrypt-helper.busy-wait-interval:PT1M}") Duration busyWaitInterval,
             @Value("${lets-encrypt-helper.account-cert-validity:P3650D}") Duration accountCertValidity,
+            @Value("${lets-encrypt-helper.store-cert-chain:true}") boolean storeCertChain,
             @Value("${lets-encrypt-helper.enabled:true}") boolean enabled,
             @Value("${lets-encrypt-helper.return-null-model:true}") boolean returnNullModel,
             @Value("${lets-encrypt-helper.development-only.http01-challenge-port:80}") int http01ChallengePort
@@ -146,6 +150,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         this.updateBeforeExpiry = updateBeforeExpiry;
         this.busyWaitInterval = busyWaitInterval;
         this.accountCertValidity = accountCertValidity;
+        this.storeCertChain = storeCertChain;
         this.enabled = enabled;
         this.returnNullModel = returnNullModel;
         this.http01ChallengePort = http01ChallengePort;
@@ -399,7 +404,13 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             Order order = account.newOrder().domains(domain).create();
             org.shredzone.acme4j.Certificate certificate = authorizeOrder(domainKey, order);
 
-            ks.setKeyEntry(serverProperties.getSsl().getKeyAlias(), domainKey.getPrivate(), keyPassword().toCharArray(), new Certificate[] { certificate.getCertificate() });
+            ks.setKeyEntry(
+                    serverProperties.getSsl().getKeyAlias(),
+                    domainKey.getPrivate(),
+                    keyPassword().toCharArray(),
+                    storeCertChain ? certificate.getCertificateChain().toArray(new X509Certificate[0]) : new Certificate[] {certificate.getCertificate()}
+            );
+
             saveKeystore(getKeystoreFile(), ks);
             logger.info("KeyStore updated");
         } catch (AcmeException | IOException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
