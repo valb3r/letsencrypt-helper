@@ -3,12 +3,12 @@
 # What is this
 
 If you have ever tried getting Let's Encrypt certificate for Spring Boot application, you know that it is painful as
-it involves using either CertBot or Docker-sidecar/Cron-job to manage certificate lifecycle. This library solves these
+it involves using either CertBot or Docker-sidecar/Cron-job to manage certificate lifecycle, especially if it is small pet application. This library solves these
 problems by managing certificate lifecycle directly in Java code with the help of awesome [Acme4j](https://github.com/shred/acme4j) library.
 
 ## Key features:
 
-1. Obtain Let's Encrypt certificate on fresh start
+1. Obtain Let's Encrypt certificate on fresh start (or from other ACME compliant certificate provider)
 2. Store generated keys and certificate into single KeyStore (`server.ssl.keystore`)
 3. Renew Let's Encrypt certificate (it watches for certificate expiration date and updates it to new before old is expired)
 4. **No JVM restart needed** when certificate gets updated
