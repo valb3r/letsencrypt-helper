@@ -16,5 +16,5 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.2.3'
+    implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.2.4'
 }

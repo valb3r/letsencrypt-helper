@@ -131,7 +131,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             @Value("${lets-encrypt-helper.account-key-alias:letsencrypt-user}") String accountKeyAlias,
             @Value("${lets-encrypt-helper.letsencrypt-server:acme://letsencrypt.org}") String letsEncryptServer,
             @Value("${lets-encrypt-helper.key-size:2048}") int keySize,
-            @Value("${lets-encrypt-helper.update-before-expiry:P7D}") Duration updateBeforeExpiry,
+            @Value("${lets-encrypt-helper.update-before-expiry:P30D}") Duration updateBeforeExpiry,
             @Value("${lets-encrypt-helper.busy-wait-interval:PT1M}") Duration busyWaitInterval,
             @Value("${lets-encrypt-helper.account-cert-validity:P3650D}") Duration accountCertValidity,
             @Value("${lets-encrypt-helper.store-cert-chain:true}") boolean storeCertChain,
