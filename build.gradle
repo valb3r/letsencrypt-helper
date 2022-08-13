@@ -9,7 +9,7 @@ repositories {
 
 ext {
     spring = '5.3.13'
-    springBoot = '2.5.6'
+    springBoot = '2.7.2'
     acme4j = '2.12'
     tomcatEmbed = '9.0.38'
     jettyEmbed = '9.4.3.v20170317'

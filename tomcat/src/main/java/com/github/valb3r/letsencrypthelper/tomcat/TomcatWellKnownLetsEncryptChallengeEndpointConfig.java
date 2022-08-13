@@ -3,6 +3,7 @@ package com.github.valb3r.letsencrypthelper.tomcat;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.apache.tomcat.util.net.SSLHostConfig;
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -188,9 +189,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         var protocol = (AbstractHttp11Protocol<?>) protocolHandler;
 
         var sslConfig = Arrays.stream(protocol.findSslHostConfigs())
-                .filter(it -> null != it.getCertificateKeystoreFile())
-                .filter(it -> it.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore()))
-                .filter(it -> serverProperties.getSsl().getKeyStorePassword().equals(it.getCertificateKeystorePassword()))
+                .filter(it -> matchesCertFilePathAndPassword(it, serverProperties.getSsl().getKeyStorePassword()))
                 .findFirst()
                 .orElse(null);
 
@@ -246,6 +245,24 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
     protected Instant getNow() {
         return Instant.now();
+    }
+
+    protected boolean matchesCertFilePathAndPassword(SSLHostConfig config, String password) {
+        // Spring Boot 2.5.6, Tomcat 9.0.38
+        if (null != config.getCertificateKeystoreFile()) {
+            return config.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore())
+                    && password.equals(config.getCertificateKeystorePassword());
+        }
+
+        // Spring Boot 2.7.2, Tomcat 9.0.65
+        if (null != config.getCertificates()) {
+            return config.getCertificates().stream()
+                    .filter(it -> null != it.getCertificateKeystoreFile())
+                    .filter(it -> it.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore()))
+                    .anyMatch(it -> password.equals(it.getCertificateKeystorePassword()));
+        }
+
+        return false;
     }
 
     private void createBasicKeystoreIfMissing() {
@@ -538,7 +555,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         String keyAlias = protocol.getHostConfig().getCertificateKeyAlias();
         Certificate certificate;
         try {
-            certificate = ks.getCertificate(keyAlias);
+            certificate = ks.getCertificate(readCertificateAliasFromProtocol(protocol));
         } catch (KeyStoreException e) {
             logger.warn("Failed reading certificate {} from {}", keyAlias, serverProperties.getSsl().getKeyStore());
             return null;
@@ -549,6 +566,21 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         }
 
         return null;
+    }
+
+    private String readCertificateAliasFromProtocol(TargetProtocol protocol) {
+        // Spring Boot 2.5.6, Tomcat 9.0.38
+        var result = protocol.getHostConfig().getCertificateKeyAlias();
+
+        // Spring Boot 2.7.2, Tomcat 9.0.65
+        if (null == result) {
+            result = protocol.getHostConfig().getCertificates().stream()
+                    .map(SSLHostConfigCertificate::getCertificateKeyAlias)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return result;
     }
 
     private String parseCertificateKeystoreFilePath(String path) {
