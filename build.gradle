@@ -24,5 +24,5 @@ ext {
 
 
 group = 'com.github.valb3r'
-version = '0.2.5-SNAPSHOT'
+version = '0.2.5'
 sourceCompatibility = '11'
