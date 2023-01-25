@@ -40,7 +40,7 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
  }
 
 dependencies {
-   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.2.4'
+   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.2.5'
 }
 ```
 ##### Maven:
@@ -56,7 +56,7 @@ dependencies {
    <dependency>
       <groupId>com.github.valb3r.letsencrypt-helper</groupId>
       <artifactId>letsencrypt-helper-tomcat</artifactId>
-      <version>0.2.4</version>
+      <version>0.2.5</version>
    </dependency>
 </dependencies>
 ```
@@ -73,7 +73,7 @@ dependencies {
  }
 
 dependencies {
-   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-jetty:0.2.4'
+   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-jetty:0.2.5'
 }
 ```
 ##### Maven:
@@ -89,7 +89,7 @@ dependencies {
    <dependency>
       <groupId>com.github.valb3r.letsencrypt-helper</groupId>
       <artifactId>letsencrypt-helper-jetty</artifactId>
-      <version>0.2.4</version>
+      <version>0.2.5</version>
    </dependency>
 </dependencies>
 ```
