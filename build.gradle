@@ -8,12 +8,12 @@ repositories {
 }
 
 ext {
-    spring = '5.3.13'
-    springBoot = '2.7.2'
-    acme4j = '2.12'
-    tomcatEmbed = '9.0.38'
-    jettyEmbed = '9.4.3.v20170317'
-    bouncycastle = '1.69'
+    spring = '6.0.3'
+    springBoot = '3.0.5'
+    acme4j = '2.16'
+    tomcatEmbed = '10.1.7'
+    jettyEmbed = '11.0.14'
+    bouncycastle = '1.72'
 
     // tests
     testContainers = '1.16.2'
@@ -25,4 +25,4 @@ ext {
 
 group = 'com.github.valb3r'
 version = '0.2.6-SNAPSHOT'
-sourceCompatibility = '11'
+sourceCompatibility = '17'
