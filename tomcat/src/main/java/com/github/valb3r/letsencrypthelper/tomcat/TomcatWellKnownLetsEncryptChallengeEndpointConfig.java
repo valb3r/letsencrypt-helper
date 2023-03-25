@@ -1,5 +1,7 @@
 package com.github.valb3r.letsencrypthelper.tomcat;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.apache.tomcat.util.net.SSLHostConfig;
@@ -39,8 +41,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.servlet.mvc.AbstractController;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -67,6 +67,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * This configuration class is responsible for maintaining KeyStore with LetsEncrypt certificates.
@@ -248,13 +249,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     }
 
     protected boolean matchesCertFilePathAndPassword(SSLHostConfig config, String password) {
-        // Spring Boot 2.5.6, Tomcat 9.0.38
-        if (null != config.getCertificateKeystoreFile()) {
-            return config.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore())
-                    && password.equals(config.getCertificateKeystorePassword());
-        }
-
-        // Spring Boot 2.7.2, Tomcat 9.0.65
+        // Spring Boot 3+
         if (null != config.getCertificates()) {
             return config.getCertificates().stream()
                     .filter(it -> null != it.getCertificateKeystoreFile())
@@ -290,7 +285,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
                     "For Protocol {}:{} unable to read certificate from {}",
                     protocol.getClass().getCanonicalName(),
                     protocol.getPort(),
-                    sslConfig.getCertificateKeystoreFile()
+                    sslConfig.getCertificates().stream().map(SSLHostConfigCertificate::getCertificateKeystoreFile).collect(Collectors.toList())
             );
             return null;
         }
@@ -340,7 +335,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
                 logger.warn("Certificate is null on {}:{} from {}",
                         protocol.getProtocol().getClass(),
                         protocol.getProtocol().getPort(),
-                        protocol.getHostConfig().getCertificateKeystoreFile()
+                        protocol.getHostConfig().getCertificates().stream().map(SSLHostConfigCertificate::getCertificateKeystoreFile).collect(Collectors.toList())
                 );
                 continue;
             }
@@ -552,12 +547,11 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             throw new IllegalStateException("Missing KeyStore: " + serverProperties.getSsl().getKeyStore());
         }
 
-        String keyAlias = protocol.getHostConfig().getCertificateKeyAlias();
         Certificate certificate;
         try {
             certificate = ks.getCertificate(readCertificateAliasFromProtocol(protocol));
         } catch (KeyStoreException e) {
-            logger.warn("Failed reading certificate {} from {}", keyAlias, serverProperties.getSsl().getKeyStore());
+            logger.warn("Failed reading from {}", serverProperties.getSsl().getKeyStore());
             return null;
         }
 
@@ -569,18 +563,10 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     }
 
     private String readCertificateAliasFromProtocol(TargetProtocol protocol) {
-        // Spring Boot 2.5.6, Tomcat 9.0.38
-        var result = protocol.getHostConfig().getCertificateKeyAlias();
-
-        // Spring Boot 2.7.2, Tomcat 9.0.65
-        if (null == result) {
-            result = protocol.getHostConfig().getCertificates().stream()
-                    .map(SSLHostConfigCertificate::getCertificateKeyAlias)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        return result;
+        return protocol.getHostConfig().getCertificates().stream()
+                .map(SSLHostConfigCertificate::getCertificateKeyAlias)
+                .findFirst()
+                .orElse(null);
     }
 
     private String parseCertificateKeystoreFilePath(String path) {

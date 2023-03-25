@@ -1,5 +1,7 @@
 package com.github.valb3r.letsencrypthelper.jetty;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -43,8 +45,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.servlet.mvc.AbstractController;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -206,7 +206,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         createBasicKeystoreIfMissing();
 
         observedEndpoints.addAll(
-                sslContextFactories.stream().map(this::createObservableProtocol).collect(Collectors.toList())
+                sslContextFactories.stream().map(this::createObservableProtocol).toList()
         );
         if (customized.compareAndSet(false, true)) {
             new Thread(this::letsEncryptCheckCertValidityAndRotateIfNeeded, "LetsEncrypt Certificate Watcher").start();

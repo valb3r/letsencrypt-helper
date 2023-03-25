@@ -16,7 +16,7 @@ dependencies {
     implementation "org.shredzone.acme4j:acme4j-client:$acme4j"
     implementation "org.shredzone.acme4j:acme4j-utils:$acme4j"
 
-    implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastle"
+    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastle"
 
 
     testImplementation project(":tests-common")

@@ -17,12 +17,19 @@ dependencies {
     implementation "org.shredzone.acme4j:acme4j-client:$acme4j"
     implementation "org.shredzone.acme4j:acme4j-utils:$acme4j"
 
-    implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastle"
+    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastle"
 
 
     testImplementation project(":tests-common")
     testImplementation ("org.springframework.boot:spring-boot-starter-web:$springBoot") {
         exclude module: 'spring-boot-starter-tomcat'
+    }
+    // See https://github.com/spring-projects/spring-boot/issues/33044 for details
+    testImplementation('jakarta.servlet:jakarta.servlet-api') {
+        version {
+            strictly '5.0.0'
+            because "Jetty 11 does not support Servlet 6 yet"
+        }
     }
     testImplementation "org.springframework.boot:spring-boot-starter-jetty:$springBoot"
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBoot"

@@ -6,6 +6,8 @@ If you have ever tried getting Let's Encrypt certificate for Spring Boot applica
 it involves using either CertBot or Docker-sidecar/Cron-job to manage certificate lifecycle, especially if it is small pet application. This library solves these
 problems by managing certificate lifecycle directly in Java code with the help of awesome [Acme4j](https://github.com/shred/acme4j) library.
 
+**Note: This version is for Spring 3.x, for older Spring versions see [Release v.0.2.5](https://github.com/valb3r/letsencrypt-helper/tree/8caa2a4befddab8f5204921eb28ff0b757d2a1c5)**
+
 ## Key features:
 
 1. Obtain Let's Encrypt certificate on fresh start (or from other ACME compliant certificate provider)
@@ -40,7 +42,7 @@ Tomcat connector to this port, so the only thing needed on your side is to open 
  }
 
 dependencies {
-   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.2.5'
+   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-tomcat:0.3.0'
 }
 ```
 ##### Maven:
@@ -56,7 +58,7 @@ dependencies {
    <dependency>
       <groupId>com.github.valb3r.letsencrypt-helper</groupId>
       <artifactId>letsencrypt-helper-tomcat</artifactId>
-      <version>0.2.5</version>
+      <version>0.3.0</version>
    </dependency>
 </dependencies>
 ```
@@ -73,7 +75,7 @@ dependencies {
  }
 
 dependencies {
-   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-jetty:0.2.5'
+   implementation 'com.github.valb3r.letsencrypt-helper:letsencrypt-helper-jetty:0.3.0'
 }
 ```
 ##### Maven:
@@ -89,7 +91,7 @@ dependencies {
    <dependency>
       <groupId>com.github.valb3r.letsencrypt-helper</groupId>
       <artifactId>letsencrypt-helper-jetty</artifactId>
-      <version>0.2.5</version>
+      <version>0.3.0</version>
    </dependency>
 </dependencies>
 ```

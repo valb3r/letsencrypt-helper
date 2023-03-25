@@ -24,3 +24,8 @@ hs_err_pid*
 
 .gradle/
 build/
+
+# App specific
+temp-test-keystore
+expired-test-keystore
+not-expired-test-keystore
