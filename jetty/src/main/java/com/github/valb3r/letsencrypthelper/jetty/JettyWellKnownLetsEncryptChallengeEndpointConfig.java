@@ -206,7 +206,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         createBasicKeystoreIfMissing();
 
         observedEndpoints.addAll(
-                sslContextFactories.stream().map(this::createObservableProtocol).collect(Collectors.toList())
+                sslContextFactories.stream().map(this::createObservableProtocol).toList()
         );
         if (customized.compareAndSet(false, true)) {
             new Thread(this::letsEncryptCheckCertValidityAndRotateIfNeeded, "LetsEncrypt Certificate Watcher").start();
