@@ -110,6 +110,9 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
     private final List<TargetProtocol> observedProtocols = new CopyOnWriteArrayList<>();
     private final AtomicBoolean customized = new AtomicBoolean();
 
+    // Internal
+    private SSLHostConfig sslHostConfig;
+
     /**
      * Initialize LetsEncrypt certificate obtaining and renewal class.
      * @param serverProperties - SSL properties (serverProperties.ssl) to be used
@@ -199,9 +202,11 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             return;
         }
 
+        this.sslHostConfig = sslConfig;
+
         createBasicKeystoreIfMissing();
 
-        TargetProtocol observe = createObservableProtocol(protocol, sslConfig);
+        TargetProtocol observe = createObservableProtocol(protocol);
         if (observe == null) {
             return;
         }
@@ -244,20 +249,42 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         };
     }
 
+    @Configuration
+    public static class CustomTomcatServletWebServerFactoryCustomizer
+            implements WebServerFactoryCustomizer<TomcatServletWebServerFactory> {
+
+        private final TomcatWellKnownLetsEncryptChallengeEndpointConfig challengeEndpointConfig;
+
+        public CustomTomcatServletWebServerFactoryCustomizer(TomcatWellKnownLetsEncryptChallengeEndpointConfig challengeEndpointConfig) {
+            this.challengeEndpointConfig = challengeEndpointConfig;
+        }
+
+        // For Spring Boot 3.1+ forcefully creating empty keystore if does not exist due to SslConnectorCustomizer
+        @Override
+        public void customize(TomcatServletWebServerFactory factory) {
+            challengeEndpointConfig.createBasicKeystoreIfMissing();
+        }
+    }
+
     protected Instant getNow() {
         return Instant.now();
     }
 
     protected boolean matchesCertFilePathAndPassword(SSLHostConfig config, String password) {
-        // Spring Boot 3+
+        // Spring Boot 3.1+ Hacketty here
+        return null != findMatchingCertificate(config, password);
+    }
+
+    protected SSLHostConfigCertificate findMatchingCertificate(SSLHostConfig config, String password) {
         if (null != config.getCertificates()) {
             return config.getCertificates().stream()
-                    .filter(it -> null != it.getCertificateKeystoreFile())
-                    .filter(it -> it.getCertificateKeystoreFile().contains(serverProperties.getSsl().getKeyStore()))
-                    .anyMatch(it -> password.equals(it.getCertificateKeystorePassword()));
+                    .filter(it -> null != it.getCertificateKeyAlias())
+                    .filter(it -> it.getCertificateKeyAlias().equals(config.getCertificates().stream().findFirst().get().getCertificateKeyAlias()))
+                    .filter(it -> password.equals(it.getCertificateKeystorePassword()))
+                    .findFirst().orElse(null);
         }
 
-        return false;
+        return null;
     }
 
     private void createBasicKeystoreIfMissing() {
@@ -276,8 +303,8 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
         logger.info("Created basic (dummy cert, real account/domain keys) KeyStore: {}", keystoreFile.getAbsolutePath());
     }
 
-    private TargetProtocol createObservableProtocol(AbstractHttp11Protocol<?> protocol, SSLHostConfig sslConfig) {
-        var observe = new TargetProtocol(sslConfig, protocol);
+    private TargetProtocol createObservableProtocol(AbstractHttp11Protocol<?> protocol) {
+        var observe = new TargetProtocol(sslHostConfig, protocol);
         var ks = tryToReadKeystore();
         var cert = tryToReadCertificate(observe, ks);
         if (null == cert) {
@@ -285,7 +312,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
                     "For Protocol {}:{} unable to read certificate from {}",
                     protocol.getClass().getCanonicalName(),
                     protocol.getPort(),
-                    sslConfig.getCertificates().stream().map(SSLHostConfigCertificate::getCertificateKeystoreFile).collect(Collectors.toList())
+                    sslHostConfig.getCertificates().stream().map(SSLHostConfigCertificate::getCertificateKeystoreFile).collect(Collectors.toList())
             );
             return null;
         }
@@ -345,7 +372,9 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
             }
 
             try {
-                updateCertificateAndKeystore(ks);
+                updateKeystoreAndSave(ks);
+                var certificate = findMatchingCertificate(sslHostConfig, keyPassword());
+                certificate.setCertificateKeystore(ks); // Since Spring 3.1 KeyStore is used instead of Keystore file
                 protocol.getProtocol().reloadSslHostConfigs();
             } catch (RuntimeException ex) {
                 logger.warn("Failed updating KeyStore", ex);
@@ -393,7 +422,7 @@ public class TomcatWellKnownLetsEncryptChallengeEndpointConfig implements Tomcat
 
     }
 
-    private void updateCertificateAndKeystore(KeyStore ks) {
+    private void updateKeystoreAndSave(KeyStore ks) {
         Session session = new Session(letsEncryptServer);
         URI tos;
         try {

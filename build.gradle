@@ -8,8 +8,8 @@ repositories {
 }
 
 ext {
-    spring = '6.0.3'
-    springBoot = '3.0.5'
+    spring = '6.0.9'
+    springBoot = '3.1.0'
     acme4j = '2.16'
     tomcatEmbed = '10.1.7'
     jettyEmbed = '11.0.14'
