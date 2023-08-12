@@ -3,6 +3,8 @@ rootProject.name = 'letsencrypt-helper'
 include 'tomcat'
 include 'jetty'
 include 'tests-common'
+include 'tomcat:tests-spring-3.0'
+include 'jetty:tests-spring-3.0'
 
 project(":tomcat").projectDir = file("tomcat")
 project(":jetty").projectDir = file("jetty")

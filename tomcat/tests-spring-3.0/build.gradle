@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation project(":tomcat")
+    testImplementation project(":tests-common")
+    testImplementation "org.springframework.boot:spring-boot-starter-web:3.0.0"
+    testImplementation "org.springframework.boot:spring-boot-starter-tomcat:3.0.0"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:3.0.0"
+
+    testImplementation "org.awaitility:awaitility:$awaitability"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:$jupiter"
+    testImplementation "org.testcontainers:junit-jupiter:$testContainers"
+    testImplementation "org.assertj:assertj-core:$assertj"
+}
+
+test {
+    useJUnitPlatform()
+}
