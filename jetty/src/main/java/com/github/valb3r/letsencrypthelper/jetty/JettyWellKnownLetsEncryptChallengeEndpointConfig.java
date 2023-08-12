@@ -36,6 +36,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.jetty.ConfigurableJettyWebServerFactory;
 import org.springframework.boot.web.embedded.jetty.JettyServerCustomizer;
+import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -71,7 +72,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  * This configuration class is responsible for maintaining KeyStore with LetsEncrypt certificates.
@@ -191,7 +191,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
                 continue;
             }
             var ctx = factory.getSslContextFactory();
-            if (!ctx.getKeyStorePath().contains(serverProperties.getSsl().getKeyStore())
+            if (!ctx.getKeyStorePassword().equals(serverProperties.getSsl().getKeyStorePassword())
                     || !ctx.getCertAlias().equals(serverProperties.getSsl().getKeyAlias())) {
                 continue;
             }
@@ -243,6 +243,23 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
                 factory.addServerCustomizers(this::httpToHttpsRedirectConnector);
             }
         };
+    }
+
+    @Configuration
+    public static class CustomTomcatServletWebServerFactoryCustomizer
+            implements WebServerFactoryCustomizer<JettyServletWebServerFactory> {
+
+        private final JettyWellKnownLetsEncryptChallengeEndpointConfig challengeEndpointConfig;
+
+        public CustomTomcatServletWebServerFactoryCustomizer(JettyWellKnownLetsEncryptChallengeEndpointConfig challengeEndpointConfig) {
+            this.challengeEndpointConfig = challengeEndpointConfig;
+        }
+
+        // For Spring Boot 3.1+ forcefully creating empty keystore if does not exist due to SslConnectorCustomizer
+        @Override
+        public void customize(JettyServletWebServerFactory factory) {
+            challengeEndpointConfig.createBasicKeystoreIfMissing();
+        }
     }
 
     protected Instant getNow() {
@@ -337,7 +354,9 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
 
             try {
                 updateCertificateAndKeystore(ks);
-                endpoint.getSslContextFactory().reload(it -> {});
+                endpoint.getSslContextFactory().reload(it -> {
+                    it.setKeyStore(ks);
+                });
             } catch (Exception ex) {
                 logger.warn("Failed updating KeyStore", ex);
             }
