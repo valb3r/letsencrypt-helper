@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation project(":jetty")
+    testImplementation project(":tests-common")
+
+    testImplementation ("org.springframework.boot:spring-boot-starter-web:3.0.0") {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+    testImplementation "org.springframework.boot:spring-boot-starter-jetty:3.0.0"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:3.0.0"
+   // See https://github.com/spring-projects/spring-boot/issues/33044 for details
+    testImplementation('jakarta.servlet:jakarta.servlet-api') {
+        version {
+            strictly '5.0.0'
+            because "Jetty 11 does not support Servlet 6 yet"
+        }
+    }
+
+    testImplementation "org.awaitility:awaitility:$awaitability"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:$jupiter"
+    testImplementation "org.testcontainers:junit-jupiter:$testContainers"
+    testImplementation "org.assertj:assertj-core:$assertj"
+}
+
+test {
+    useJUnitPlatform()
+}
