@@ -407,7 +407,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
         Session session = new Session(letsEncryptServer);
         URI tos;
         try {
-            tos = session.getMetadata().getTermsOfService();
+            tos = session.getMetadata().getTermsOfService().orElse(null);
             if (null != tos) {
                 logger.warn("Please review carefully and accept TOS {}", tos);
             }
@@ -448,7 +448,7 @@ public class JettyWellKnownLetsEncryptChallengeEndpointConfig implements JettySe
                     continue;
                 }
 
-                var challenge = auth.findChallenge(Http01Challenge.class);
+                var challenge = auth.findChallenge(Http01Challenge.class).orElse(null);
                 if (null == challenge) {
                     throw new IllegalStateException("Requires non-http challenge");
                 }

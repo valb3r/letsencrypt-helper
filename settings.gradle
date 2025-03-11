@@ -5,6 +5,8 @@ include 'jetty'
 include 'tests-common'
 include 'tomcat:tests-spring-3.0'
 include 'jetty:tests-spring-3.0'
+include 'tomcat:tests-spring-3.2'
+include 'jetty:tests-spring-3.2'
 
 project(":tomcat").projectDir = file("tomcat")
 project(":jetty").projectDir = file("jetty")
