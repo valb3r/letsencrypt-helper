@@ -14,7 +14,6 @@ dependencies {
     compileOnly "org.apache.tomcat.embed:tomcat-embed-core:$tomcatEmbed"
 
     implementation "org.shredzone.acme4j:acme4j-client:$acme4j"
-    implementation "org.shredzone.acme4j:acme4j-utils:$acme4j"
 
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastle"
 

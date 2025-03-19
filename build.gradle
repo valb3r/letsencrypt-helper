@@ -8,12 +8,12 @@ repositories {
 }
 
 ext {
-    spring = '6.0.11'
-    springBoot = '3.1.2'
-    acme4j = '2.16'
-    tomcatEmbed = '10.1.7'
-    jettyEmbed = '11.0.14'
-    bouncycastle = '1.72'
+    spring = '6.2.3'
+    springBoot = '3.4.3'
+    acme4j = '3.5.1'
+    tomcatEmbed = '11.0.5'
+    jettyEmbed = '12.0.17'
+    bouncycastle = '1.80'
 
     // tests
     testContainers = '1.16.2'

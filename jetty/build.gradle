@@ -12,10 +12,9 @@ dependencies {
     compileOnly ("org.springframework:spring-webmvc:$spring")
     compileOnly "org.springframework.boot:spring-boot-autoconfigure:$springBoot"
     compileOnly "org.eclipse.jetty:jetty-server:$jettyEmbed"
-    compileOnly "org.eclipse.jetty:jetty-servlet:$jettyEmbed"
+    compileOnly "org.eclipse.jetty.ee10:jetty-ee10-servlet:$jettyEmbed"
 
     implementation "org.shredzone.acme4j:acme4j-client:$acme4j"
-    implementation "org.shredzone.acme4j:acme4j-utils:$acme4j"
 
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastle"
 
@@ -24,13 +23,7 @@ dependencies {
     testImplementation ("org.springframework.boot:spring-boot-starter-web:$springBoot") {
         exclude module: 'spring-boot-starter-tomcat'
     }
-    // See https://github.com/spring-projects/spring-boot/issues/33044 for details
-    testImplementation('jakarta.servlet:jakarta.servlet-api') {
-        version {
-            strictly '5.0.0'
-            because "Jetty 11 does not support Servlet 6 yet"
-        }
-    }
+    testImplementation "jakarta.servlet:jakarta.servlet-api"
     testImplementation "org.springframework.boot:spring-boot-starter-jetty:$springBoot"
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBoot"
 
