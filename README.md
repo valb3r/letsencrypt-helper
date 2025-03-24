@@ -6,7 +6,18 @@ If you have ever tried getting Let's Encrypt certificate for Spring Boot applica
 it involves using either CertBot or Docker-sidecar/Cron-job to manage certificate lifecycle, especially if it is small pet application. This library solves these
 problems by managing certificate lifecycle directly in Java code with the help of awesome [Acme4j](https://github.com/shred/acme4j) library.
 
-**Note: This version is for Spring Boot 3.x and Spring 6.x, for older Spring/Spring Boot versions see [Release 0.2.5](https://github.com/valb3r/letsencrypt-helper/tree/67f28268c5c8882ce8f1821c7b6940e3abfcf906)**
+## Spring Boot version to letsencrypt-helper compatibility matrix
+
+Unfortunately, Spring-binding evolves quite dynamically, therefore one must follow compatibility matrix
+in order to support certain Spring-boot version
+
+| Spring Boot version | letsencrypt-helper version |
+|---------------------|----------------------------|
+| 3.4+                | 0.5.0                      |
+| 3.1-3.2             | 0.4.0                      |
+| 3.0                 | 0.3.0                      |
+| <3.0                | 0.2.5                      |
+
 
 ## Key features:
 
